@@ -1,0 +1,54 @@
+{% extends "admin/base_admin.html" %}
+{% set page_title = "Orders" %}
+{% block title %}Orders | PSI Admin{% endblock %}
+
+{% block content %}
+<section class="card">
+  <div class="section-title" id="assign">
+    <h2>Assign Delivery Agent</h2>
+    <span class="pill">Quick assign</span>
+  </div>
+  <form id="assign-delivery-form" class="form-grid">
+    <input name="order_id" placeholder="Order ID" required>
+    <input name="delivery_agent_id" placeholder="Delivery Agent User ID" required>
+    <div class="actions" style="grid-column:1/-1">
+      <button class="btn btn-primary" type="submit">Assign Delivery</button>
+    </div>
+  </form>
+</section>
+
+<section class="card table-card" style="margin-top:16px;">
+  <header class="section-title">
+    <h2>Orders</h2>
+    <span class="pill">{{ orders|length }} total</span>
+  </header>
+  <table>
+    <thead>
+      <tr>
+        <th>Order</th>
+        <th>User</th>
+        <th>Store</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Delivery</th>
+        <th>Agent</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders[:200] %}
+      <tr>
+        <td class="mono">{{ order.order_id }}</td>
+        <td class="mono">{{ order.user_id }}</td>
+        <td class="mono">{{ order.store_id or "-" }}</td>
+        <td>Rs {{ "%.2f"|format(order.total_price or 0) }}</td>
+        <td><span class="pill {{ 'ok' if order.order_status=='DELIVERED' else '' }}">{{ order.order_status or "-" }}</span></td>
+        <td>{{ order.delivery_type or "-" }}</td>
+        <td class="mono">{{ order.delivery_agent_id or "-" }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7">No orders found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

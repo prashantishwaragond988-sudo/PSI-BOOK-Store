@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>PSI Book Store</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:
+    radial-gradient(900px 500px at 8% 0%, #dbeafe 0%, rgba(219,234,254,0) 62%),
+    radial-gradient(850px 500px at 92% 100%, #ccfbf1 0%, rgba(204,251,241,0) 58%),
+    #eef2ff;
+  overflow-x:hidden;
+}
+:root{
+  --brand-700:#0f4aa8;
+  --brand-600:#1d4ed8;
+  --brand-500:#2563eb;
+  --accent-500:#0891b2;
+  --text-900:#0b1f44;
+  --text-700:#334155;
+  --text-600:#475569;
+  --lift: 5px;
+  --lift-shadow: rgba(7,25,72,.3);
+}
+
+header{
+  background:linear-gradient(135deg, var(--brand-700), var(--brand-500));
+  color:white;
+  padding:12px 20px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+
+.brand{
+  font-size:24px;
+  font-weight:700;
+}
+
+.header-center{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-width:320px;
+  flex:1;
+  max-width:560px;
+}
+
+.input{
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:6px;
+}
+
+.menu a{
+  color:white;
+  margin-left:12px;
+  text-decoration:none;
+  font-weight:bold;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.menu a:hover{
+  text-decoration:underline;
+}
+
+.main{
+  display:flex;
+}
+
+.sidebar{
+  width:220px;
+  background:white;
+  padding:15px;
+  height:calc(100vh - 78px);
+  position:sticky;
+  top:78px;
+  box-shadow:2px 0 10px rgba(0,0,0,.06);
+  overflow-y:auto;
+}
+
+.sidebar h3{
+  margin-top:0;
+}
+
+.cat-item{
+  padding:8px;
+  cursor:pointer;
+  border-radius:6px;
+  transition:.2s;
+}
+
+.cat-item:hover{
+  background:#e0f2fe;
+  color:var(--brand-700);
+}
+
+.cat-item.active{
+  background:linear-gradient(135deg, var(--brand-600), var(--accent-500));
+  color:white;
+}
+
+.products{
+  flex:1;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:22px;
+  padding:25px;
+}
+
+.card{
+  background:linear-gradient(170deg, #ffffff, #f8fbff 72%);
+  border-radius:12px;
+  padding:12px;
+  box-shadow:0 6px 16px rgba(0,0,0,.12);
+  border:2px solid transparent;
+  transition:.25s;
+  position:relative;
+  overflow:hidden;
+}
+
+.card:hover{
+  transform:translateY(-4px);
+  border-color:var(--brand-600);
+}
+
+.card img{
+  width:100%;
+  height:210px;
+  object-fit:cover;
+  border-radius:8px;
+}
+
+.card h4{
+  margin:8px 0 4px;
+  color:var(--text-900);
+  font-size:16px;
+}
+
+.card p{
+  margin:3px 0;
+  color:var(--text-700);
+  font-size:13px;
+}
+
+.card p.book-cat{
+  color:var(--brand-600);
+  font-weight:600;
+}
+
+.card p.book-store{
+  color:var(--text-600);
+}
+
+.card p.book-price,
+.card p.book-price b{
+  color:var(--text-900);
+}
+
+.card button{
+  width:100%;
+  padding:8px;
+  border:none;
+  background:linear-gradient(135deg, var(--brand-600), var(--accent-500));
+  color:white;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.wish{
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 4px 10px rgba(0,0,0,0.2);
+  border:none;
+  font-size:18px;
+  z-index:3;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.wish:hover{
+  transform:translateY(-1px) scale(1.03);
+  box-shadow:0 6px 12px rgba(0,0,0,0.22);
+}
+.wish:active{
+  transform:translateY(1px) scale(.98);
+}
+
+.empty{
+  color:#666;
+  background:white;
+  border-radius:10px;
+  padding:14px;
+  box-shadow:0 6px 16px rgba(0,0,0,.1);
+}
+
+.cart-float{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:linear-gradient(135deg, var(--brand-600), var(--accent-500));
+  color:white;
+  padding:14px;
+  border-radius:50%;
+  cursor:pointer;
+  box-shadow:0 8px 18px rgba(0,0,0,.3);
+  z-index:20;
+}
+
+#cartCount{
+  background:red;
+  padding:2px 6px;
+  border-radius:50%;
+  font-size:12px;
+  margin-left:4px;
+}
+
+.cart-box{
+  position:fixed;
+  bottom:90px;
+  right:20px;
+  width:340px;
+  background:white;
+  border-radius:16px;
+  box-shadow:0 12px 28px rgba(0,0,0,.25);
+  transform:scale(0);
+  transform-origin:bottom right;
+  transition:.25s;
+  padding:18px;
+  z-index:21;
+}
+
+.cart-box.show{
+  transform:scale(1);
+}
+
+.cart-title{
+  font-weight:bold;
+  margin-bottom:10px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.cart-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid #eee;
+  padding:6px 0;
+  font-size:14px;
+}
+
+.qty{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.qty button{
+  background:var(--brand-600);
+  border:none;
+  color:white;
+  padding:3px 7px;
+  border-radius:4px;
+  cursor:pointer;
+}
+
+.remove{
+  color:red;
+  cursor:pointer;
+  font-weight:bold;
+  border:none;
+  background:transparent;
+}
+
+.total{
+  margin-top:10px;
+  font-weight:bold;
+}
+
+.checkout{
+  margin-top:12px;
+  background:linear-gradient(135deg, #fde047, #f59e0b);
+  border:none;
+  padding:9px;
+  width:100%;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.toast{
+  position:fixed;
+  top:90px;
+  right:20px;
+  background:#28a745;
+  color:white;
+  padding:12px 18px;
+  border-radius:8px;
+  opacity:0;
+  transform:translateY(-14px);
+  transition:.3s;
+  z-index:30;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translateY(0);
+}
+.menu a,
+.card button:not(.wish),
+.checkout,
+.qty button,
+.cart-float{
+  transform:translateY(0);
+  box-shadow:0 var(--lift) 0 var(--lift-shadow);
+  transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+.menu a:hover,
+.card button:not(.wish):hover,
+.checkout:hover,
+.qty button:hover,
+.cart-float:hover{
+  transform:translateY(-2px);
+  box-shadow:0 calc(var(--lift) + 2px) 0 var(--lift-shadow);
+  filter:brightness(1.05);
+}
+.menu a:active,
+.card button:not(.wish):active,
+.checkout:active,
+.qty button:active,
+.cart-float:active{
+  transform:translateY(2px);
+  box-shadow:0 2px 0 var(--lift-shadow);
+}
+
+@media (max-width:900px){
+  .main{
+    flex-direction:column;
+  }
+  .sidebar{
+    width:100%;
+    position:relative;
+    top:0;
+    height:auto;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .sidebar h3{
+    width:100%;
+  }
+}
+
+@media (max-width:720px){
+  .header-center{
+    min-width:100%;
+  }
+  .menu{
+    width:100%;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .menu a{
+    margin-left:0;
+  }
+  .products{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    padding:12px;
+    gap:12px;
+  }
+  .cart-box{
+    width:92%;
+    right:4%;
+  }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">BOOK Zone</div>
+
+  <div class="header-center">
+    <input class="input" id="search" placeholder="Search books or store...">
+  </div>
+
+  <div class="menu">
+    <a href="/store"><i class="fa fa-house"></i> Home</a>
+    <a href="/about"><i class="fa fa-circle-info"></i> About</a>
+    <a href="/help"><i class="fa fa-headset"></i> Help</a>
+    <a href="/profile"><i class="fa fa-user"></i> Profile</a>
+    <a href="/logout" style="color:yellow"><i class="fa fa-right-from-bracket"></i> Logout</a>
+  </div>
+</header>
+
+<div class="main">
+  <div class="sidebar">
+    <h3>Categories</h3>
+    <div class="cat-item active" data-cat="All">All</div>
+    <div id="categoryList"></div>
+  </div>
+  <div class="products" id="products"></div>
+</div>
+
+<div class="cart-float" id="cartToggle">
+  <i class="fa fa-cart-shopping"></i> <span id="cartCount">0</span>
+</div>
+
+<div class="cart-box" id="cartBox">
+  <div class="cart-title">
+    <span>My Cart</span>
+    <span id="cartClose" style="cursor:pointer">X</span>
+  </div>
+  <div id="cartItems"></div>
+  <p class="total">Total Rs <span id="total">0</span></p>
+  <button id="checkoutBtn" class="checkout" type="button">Checkout</button>
+</div>
+
+<div id="toast" class="toast">Added to cart</div>
+
+<script>
+const cartBox = document.getElementById("cartBox");
+const cartItemsEl = document.getElementById("cartItems");
+const cartCountEl = document.getElementById("cartCount");
+const totalEl = document.getElementById("total");
+const checkoutBtn = document.getElementById("checkoutBtn");
+const searchEl = document.getElementById("search");
+const productsEl = document.getElementById("products");
+const categoryListEl = document.getElementById("categoryList");
+let books = [];
+let selectedCategory = "All";
+
+function escapeHtml(v){
+  return (v || "").replace(/[&<>"']/g, function(ch){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch];
+  });
+}
+
+function imageSrc(value){
+  const raw = (value || "").toString().trim();
+  if(!raw){ return "/static/p1.jpg"; }
+  if(raw.startsWith("http://") || raw.startsWith("https://")){ return raw; }
+  let normalized = raw.replaceAll("\\", "/");
+  const lower = normalized.toLowerCase();
+
+  function encodePath(path){
+    return (path || "")
+      .split("/")
+      .filter((seg) => seg && seg.trim())
+      .map((seg) => {
+        try{
+          return encodeURIComponent(decodeURIComponent(seg));
+        }catch(_){
+          return encodeURIComponent(seg);
+        }
+      })
+      .join("/");
+  }
+
+  function relativeAfter(key){
+    const idx = lower.indexOf(key);
+    if(idx === -1){ return ""; }
+    return normalized.substring(idx + key.length);
+  }
+
+  const assetsRelative = relativeAfter("assets/books/");
+  if(assetsRelative){
+    return "/book-assets/" + encodePath(assetsRelative);
+  }
+
+  const bookAssetsRelative = relativeAfter("book-assets/");
+  if(bookAssetsRelative){
+    return "/book-assets/" + encodePath(bookAssetsRelative);
+  }
+
+  const staticRelative = relativeAfter("static/");
+  if(staticRelative){
+    return "/static/" + encodePath(staticRelative);
+  }
+
+  const filename = normalized.split("/").filter(Boolean).pop() || "p1.jpg";
+  return "/static/" + encodePath(filename);
+}
+
+function showToast(message){
+  const t = document.getElementById("toast");
+  t.innerText = message || "Done";
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 1200);
+}
+
+async function postJson(url, payload){
+  const res = await fetch(url,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload || {})
+  });
+  return res.json();
+}
+
+function renderBooks(list){
+  productsEl.innerHTML = "";
+  if(!list.length){
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "No books found.";
+    productsEl.appendChild(empty);
+    return;
+  }
+
+  list.forEach((b) => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const wish = document.createElement("button");
+    wish.className = "wish";
+    wish.type = "button";
+    wish.innerHTML = "&#10084;";
+    wish.addEventListener("click", () => addWishlist(b.id, b.store_id));
+    card.appendChild(wish);
+
+    const img = document.createElement("img");
+    img.src = imageSrc(b.image);
+    img.alt = b.title || "book";
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.onerror = () => {
+      if(img.dataset.fallback === "1"){ return; }
+      img.dataset.fallback = "1";
+      img.src = "/static/p1.jpg";
+    };
+    card.appendChild(img);
+
+    const title = document.createElement("h4");
+    title.textContent = b.title || "Untitled";
+    card.appendChild(title);
+
+    const cat = document.createElement("p");
+    cat.className = "book-cat";
+    cat.textContent = b.category || "Uncategorized";
+    card.appendChild(cat);
+
+    const store = document.createElement("p");
+    store.className = "book-store";
+    store.textContent = "Store: " + (b.store_name || "-");
+    card.appendChild(store);
+
+    const price = document.createElement("p");
+    price.className = "book-price";
+    price.innerHTML = "<b>Rs " + escapeHtml(String(b.price || 0)) + "</b>";
+    card.appendChild(price);
+
+    const addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.textContent = "Add to Cart";
+    addBtn.addEventListener("click", () => addToCart(b.id, b.store_id));
+    card.appendChild(addBtn);
+
+    productsEl.appendChild(card);
+  });
+}
+
+function applyFilters(){
+  const q = searchEl.value.trim().toLowerCase();
+  const filtered = books.filter((b) => {
+    const title = (b.title || "").toLowerCase();
+    const author = (b.author || "").toLowerCase();
+    const cat = (b.category || "").toLowerCase();
+    const store = (b.store_name || "").toLowerCase();
+    const matchCategory = selectedCategory === "All" || cat === selectedCategory.toLowerCase();
+    const matchSearch = !q || title.includes(q) || author.includes(q) || cat.includes(q) || store.includes(q);
+    return matchCategory && matchSearch;
+  });
+  renderBooks(filtered);
+}
+
+async function loadCategories(){
+  categoryListEl.innerHTML = "";
+  try{
+    const res = await fetch("/api/categories?all=1&dedupe=1");
+    const data = await res.json();
+    (Array.isArray(data) ? data : []).forEach((c) => {
+      const item = document.createElement("div");
+      item.className = "cat-item";
+      item.textContent = c.name || "";
+      item.addEventListener("click", () => {
+        document.querySelectorAll(".cat-item").forEach((n) => n.classList.remove("active"));
+        item.classList.add("active");
+        selectedCategory = c.name || "All";
+        applyFilters();
+      });
+      categoryListEl.appendChild(item);
+    });
+  }catch(e){
+    categoryListEl.innerHTML = "";
+  }
+}
+
+async function loadBooks(){
+  try{
+    const r = await fetch("/api/books?all=1");
+    const d = await r.json();
+    books = Array.isArray(d) ? d : [];
+    applyFilters();
+  }catch(e){
+    books = [];
+    renderBooks([]);
+  }
+}
+
+function renderCartItems(items){
+  cartItemsEl.innerHTML = "";
+  if(!items.length){
+    const p = document.createElement("p");
+    p.className = "empty";
+    p.textContent = "Cart empty";
+    cartItemsEl.appendChild(p);
+    return;
+  }
+
+  items.forEach((i) => {
+    const row = document.createElement("div");
+    row.className = "cart-item";
+
+    const title = document.createElement("span");
+    title.textContent = i.title || "";
+    row.appendChild(title);
+
+    const qty = document.createElement("div");
+    qty.className = "qty";
+
+    const dec = document.createElement("button");
+    dec.type = "button";
+    dec.textContent = "-";
+    dec.addEventListener("click", () => decrease(i.id));
+    qty.appendChild(dec);
+
+    const val = document.createElement("span");
+    val.textContent = String(i.qty || 1);
+    qty.appendChild(val);
+
+    const inc = document.createElement("button");
+    inc.type = "button";
+    inc.textContent = "+";
+    inc.addEventListener("click", () => addToCart(i.id));
+    qty.appendChild(inc);
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "remove";
+    remove.textContent = "X";
+    remove.addEventListener("click", () => removeItem(i.id));
+    qty.appendChild(remove);
+
+    row.appendChild(qty);
+    cartItemsEl.appendChild(row);
+  });
+}
+
+async function loadCart(){
+  try{
+    const r = await fetch("/api/cart");
+    const d = await r.json();
+    const items = Array.isArray(d.items) ? d.items : [];
+    const count = items.reduce((acc, i) => acc + Number(i.qty || 0), 0);
+    cartCountEl.innerText = String(count);
+    totalEl.innerText = String(d.total || 0);
+    checkoutBtn.disabled = count <= 0;
+    renderCartItems(items);
+  }catch(e){
+    cartCountEl.innerText = "0";
+    totalEl.innerText = "0";
+    checkoutBtn.disabled = true;
+    renderCartItems([]);
+  }
+}
+
+async function addToCart(id, storeId){
+  const data = await postJson("/api/cart/add", {book_id: id, store_id: storeId});
+  if(data.error){
+    alert(data.error);
+    return;
+  }
+  await loadCart();
+  showToast("Added to cart");
+}
+
+async function decrease(id){
+  await postJson("/api/cart/decrease", {book_id: id});
+  await loadCart();
+}
+
+async function removeItem(id){
+  await postJson("/api/cart/delete", {book_id: id});
+  await loadCart();
+}
+
+async function addWishlist(id, storeId){
+  const data = await postJson("/api/wishlist/add", {book_id: id, store_id: storeId});
+  if(data.error){
+    alert(data.error);
+    return;
+  }
+  showToast("Added to wishlist");
+}
+
+async function reloadAllData(){
+  selectedCategory = "All";
+  document.querySelectorAll(".cat-item").forEach((n) => n.classList.remove("active"));
+  const all = document.querySelector(".cat-item[data-cat='All']");
+  if(all){ all.classList.add("active"); }
+  await Promise.all([loadCategories(), loadBooks(), loadCart()]);
+}
+
+function showCartRequiredFromQuery(){
+  const url = new URL(window.location.href);
+  if(url.searchParams.get("cart_required") !== "1"){
+    return;
+  }
+  showToast("Add at least one book to cart before checkout");
+  cartBox.classList.add("show");
+  url.searchParams.delete("cart_required");
+  const next = url.pathname + (url.search ? url.search : "");
+  window.history.replaceState({}, "", next);
+}
+
+document.getElementById("cartToggle").addEventListener("click", () => {
+  cartBox.classList.toggle("show");
+  loadCart();
+});
+document.getElementById("cartClose").addEventListener("click", () => cartBox.classList.remove("show"));
+checkoutBtn.addEventListener("click", async () => {
+  await loadCart();
+  const count = Number(cartCountEl.innerText || "0");
+  if(count <= 0){
+    showToast("Add at least one book to cart before checkout");
+    cartBox.classList.add("show");
+    return;
+  }
+  window.location = "/checkout";
+});
+searchEl.addEventListener("input", () => {
+  applyFilters();
+});
+document.querySelector(".cat-item[data-cat='All']").addEventListener("click", (e) => {
+  document.querySelectorAll(".cat-item").forEach((n) => n.classList.remove("active"));
+  e.currentTarget.classList.add("active");
+  selectedCategory = "All";
+  applyFilters();
+});
+reloadAllData().then(showCartRequiredFromQuery);
+</script>
+</body>
+</html>

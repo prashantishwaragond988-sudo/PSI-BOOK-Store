@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body class="auth-body">
+  <div class="grid-glow"></div>
+  <div class="orb one"></div>
+  <div class="orb two"></div>
+
+  <div class="auth-card">
+    <div class="micro-bar"></div>
+    <div class="auth-content">
+      <p class="eyebrow">Secure portal</p>
+      <h1 class="auth-title">{{ title }}</h1>
+      <p class="auth-subtitle">Animated glassmorphic login that matches every portal.</p>
+
+      <form method="post" action="{{ post_url }}">
+        <div class="form-field">
+          <label class="field-label" for="email">Email or mobile</label>
+          <input class="field-input" id="email" name="email" type="text" value="{{ email or '' }}" placeholder="name@company.com or 98765 43210" required>
+        </div>
+        <div class="form-field">
+          <label class="field-label" for="password">Password</label>
+          <input class="field-input" id="password" name="password" type="password" placeholder="********" required>
+        </div>
+
+        <div class="actions-row">
+          <a class="link" href="/login-selection">Back</a>
+          <a class="link" href="/forgot-password">Forgot password?</a>
+        </div>
+
+        <button class="primary-btn" type="submit">Login</button>
+      </form>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+      {% if error %}<div class="error-text">{{ error }}</div>{% endif %}
+
+      <div class="helper-row">
+        Continue without changes?
+        <a class="link" href="{{ next_url }}">Go to dashboard</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

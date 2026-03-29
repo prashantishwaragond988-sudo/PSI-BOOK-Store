@@ -1,0 +1,175 @@
+{% extends "admin/base_admin.html" %}
+{% set page_title = "Dashboard" %}
+{% block title %}Dashboard | PSI Admin{% endblock %}
+
+{% block content %}
+<section class="grid grid-cols-4">
+  <div class="card metric">
+    <small>Total Orders</small>
+    <strong>{{ analytics.total_orders }}</strong>
+    <div class="pill ok">Live</div>
+  </div>
+  <div class="card metric">
+    <small>Total Sales</small>
+    <strong>Rs {{ "%.2f"|format(analytics.total_sales) }}</strong>
+    <div class="pill">Incl. COD</div>
+  </div>
+  <div class="card metric">
+    <small>Admin Commission</small>
+    <strong>Rs {{ "%.2f"|format(analytics.admin_commission_total) }}</strong>
+    <div class="pill ok">Net</div>
+  </div>
+  <div class="card metric">
+    <small>Shop Owner Payout</small>
+    <strong>Rs {{ "%.2f"|format(analytics.shop_owner_payout_total) }}</strong>
+    <div class="pill">Pending + Paid</div>
+  </div>
+</section>
+
+<section class="grid grid-cols-3" style="margin-top:16px;">
+  <div class="chart-wrap">
+    <div class="section-title">
+      <h3>User Mix</h3>
+      <span class="pill ok">{{ user_counts.total }} total</span>
+    </div>
+    <canvas id="userChart" height="200"></canvas>
+  </div>
+  <div class="chart-wrap">
+    <div class="section-title">
+      <h3>Weekly Orders</h3>
+      <span class="pill">Last 7 days</span>
+    </div>
+    <canvas id="ordersChart" height="200"></canvas>
+  </div>
+  <div class="chart-wrap">
+    <div class="section-title">
+      <h3>Revenue Split</h3>
+      <span class="pill ok">Commission vs Payout</span>
+    </div>
+    <canvas id="revenueChart" height="200"></canvas>
+  </div>
+</section>
+
+<section class="grid grid-cols-2" style="margin-top:16px;">
+  <div class="card">
+    <div class="section-title">
+      <h2>Quick Actions</h2>
+    </div>
+    <div class="chip-row">
+      <a class="primary-btn" href="/admin/stores">Manage Stores</a>
+      <a class="ghost-btn" href="/admin/users">Manage Users</a>
+      <a class="ghost-btn" href="/admin/orders">Assign Delivery</a>
+      <a class="ghost-btn" href="/admin/payouts">Weekly Payouts</a>
+      <a class="ghost-btn" href="/admin/analytics">Analytics</a>
+    </div>
+  </div>
+
+  <div class="table-card card">
+    <header class="section-title">
+      <h2>Recent Orders</h2>
+      <a class="pill" href="/admin/orders">View all</a>
+    </header>
+    <table>
+      <thead>
+        <tr>
+          <th>Order</th>
+          <th>User</th>
+          <th>Store</th>
+          <th>Total</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders[:8] %}
+        <tr>
+          <td class="mono">{{ order.order_id }}</td>
+          <td class="mono">{{ order.user_id }}</td>
+          <td class="mono">{{ order.store_id or "-" }}</td>
+          <td>Rs {{ "%.2f"|format(order.total_price or 0) }}</td>
+          <td><span class="pill {{ 'ok' if order.order_status=='DELIVERED' else '' }}">{{ order.order_status }}</span></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">No orders yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function(){
+    if(typeof Chart === "undefined") return;
+    const userCounts = {{ user_counts|tojson }};
+    const weekly = {{ weekly_orders_chart|tojson }};
+    const revenue = {{ revenue_chart|tojson }};
+
+    const userCtx = document.getElementById("userChart");
+    if(userCtx){
+      new Chart(userCtx, {
+        type: "doughnut",
+        data: {
+          labels: ["Sellers","Delivery","Customers","Admins"],
+          datasets: [{
+            data: [userCounts.sellers, userCounts.delivery, userCounts.customers, userCounts.admins],
+            backgroundColor: ["#7c5dff","#1ec8c8","#ff9aa2","#ffd86b"],
+            borderWidth: 0
+          }]
+        },
+        options: { plugins:{legend:{display:true, position:"bottom"}}, cutout:"60%" }
+      });
+    }
+
+    const ordersCtx = document.getElementById("ordersChart");
+    if(ordersCtx){
+      new Chart(ordersCtx, {
+        type: "line",
+        data: {
+          labels: weekly.map(w => w.label),
+          datasets: [{
+            label: "Orders",
+            data: weekly.map(w => w.count),
+            fill: true,
+            tension: 0.35,
+            borderColor: "#1ec8c8",
+            backgroundColor: "rgba(30,200,200,0.15)",
+            pointRadius: 4
+          }]
+        },
+        options: {
+          plugins:{legend:{display:false}},
+          scales:{y:{beginAtZero:true, ticks:{precision:0}}}
+        }
+      });
+    }
+
+    const revenueCtx = document.getElementById("revenueChart");
+    if(revenueCtx){
+      new Chart(revenueCtx, {
+        type: "bar",
+        data: {
+          labels: revenue.map(r => r.label),
+          datasets: [
+            {
+              label: "Admin Commission",
+              data: revenue.map(r => r.admin_commission),
+              backgroundColor: "rgba(124,93,255,0.7)"
+            },
+            {
+              label: "Seller Payout",
+              data: revenue.map(r => r.seller_payout),
+              backgroundColor: "rgba(30,200,200,0.7)"
+            }
+          ]
+        },
+        options: {
+          responsive:true,
+          plugins:{legend:{position:"bottom"}},
+          scales:{y:{beginAtZero:true}}
+        }
+      });
+    }
+  })();
+</script>
+{% endblock %}

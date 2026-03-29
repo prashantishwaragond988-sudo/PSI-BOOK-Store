@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice {{ invoice.order_id }}</title>
+  <style>
+    body{margin:0;font-family:Arial,sans-serif;background:#eef3fb;color:#122947}
+    .wrap{max-width:900px;margin:18px auto;padding:0 12px}
+    .toolbar{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .btn{border:0;border-radius:8px;padding:9px 12px;cursor:pointer;font-weight:700}
+    .btn-blue{background:#1f66dd;color:#fff}
+    .btn-green{background:#178c58;color:#fff}
+    .btn-gray{background:#fff;border:1px solid #c7d5ef;color:#1f3f67}
+    .bill{background:#fff;border-radius:14px;box-shadow:0 14px 28px rgba(13,36,70,.12);padding:18px}
+    .head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:2px dashed #dbe6f9;padding-bottom:10px;margin-bottom:10px}
+    .title{font-size:24px;font-weight:800}
+    .muted{color:#5e7190;font-size:13px}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{border-bottom:1px solid #e4ebf8;padding:8px;text-align:left;font-size:13px}
+    th{background:#f1f5ff}
+    .totals{margin-top:12px;display:grid;justify-content:end}
+    .totals table{width:330px}
+    .stamp{margin-top:16px;text-align:right;color:#6d7f9d;font-style:italic}
+    @media print{
+      body{background:#fff}
+      .toolbar{display:none}
+      .wrap{max-width:none;margin:0;padding:0}
+      .bill{box-shadow:none;border-radius:0}
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="toolbar">
+      <button class="btn btn-gray" onclick="history.back()">Back</button>
+      <div>
+        <button class="btn btn-blue" id="printBtn">PRINT RECEIPT</button>
+        <a class="btn btn-green" style="text-decoration:none" href="/order/{{ invoice.order_id }}/invoice?format=pdf">Download as PDF</a>
+      </div>
+    </div>
+
+    <section class="bill" id="invoiceBill">
+      <div class="head">
+        <div>
+          <div class="title">Online Book Store Invoice</div>
+          <div class="muted">Order ID: {{ invoice.order_id }}</div>
+          <div class="muted">Order Date: {{ invoice.order_date }}</div>
+        </div>
+        <div>
+          <div><b>Store:</b> {{ invoice.store_name }}</div>
+          <div><b>Shop Owner:</b> {{ invoice.shop_owner_name }}</div>
+          <div><b>Customer:</b> {{ invoice.customer_name }}</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Book</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in invoice_items %}
+          <tr>
+            <td>{{ item.title }}</td>
+            <td>Rs {{ '%.2f'|format(item.price) }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>Rs {{ '%.2f'|format(item.line_total) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="totals">
+        <table>
+          <tbody>
+            <tr><td>Total Amount</td><td>Rs {{ '%.2f'|format(invoice.total_amount) }}</td></tr>
+            <tr><td>Admin Commission</td><td>Rs {{ '%.2f'|format(invoice.admin_commission) }}</td></tr>
+            <tr><td>Shop Owner Amount</td><td>Rs {{ '%.2f'|format(invoice.shop_owner_amount) }}</td></tr>
+            <tr><td>Delivery Charge</td><td>Rs {{ '%.2f'|format(invoice.delivery_charge) }}</td></tr>
+            <tr><th>Grand Total</th><th>Rs {{ '%.2f'|format(invoice.grand_total) }}</th></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="stamp">This is a computer-generated invoice.</div>
+    </section>
+  </main>
+
+  <script src="/static/js/invoice.js"></script>
+</body>
+</html>

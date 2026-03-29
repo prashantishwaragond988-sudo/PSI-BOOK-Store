@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <style>
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(8, 12, 28, 0.85);
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 12px;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+      display: none;
+      font-weight: 600;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="auth-body">
+  <div class="grid-glow"></div>
+  <div class="orb one"></div>
+  <div class="orb two"></div>
+
+  <div class="auth-card">
+    <div class="micro-bar"></div>
+    <div class="auth-content">
+      <p class="eyebrow">Unified login</p>
+      <h1 class="auth-title">Sign in once</h1>
+      <p class="auth-subtitle">Use your email or mobile number to access any portal.</p>
+
+      {% if roles %}
+      <div class="role-chips">
+        {% for _, conf in roles.items() %}
+          <span class="chip">{{ conf.title }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <form id="loginForm" method="post" action="/login-selection">
+        <div class="form-field">
+          <label class="field-label" for="identifier">Email or mobile</label>
+          <input class="field-input" id="identifier" name="identifier" type="text" value="{{ identifier or '' }}" placeholder="you@example.com or 98765 43210" required>
+        </div>
+        <div class="form-field">
+          <label class="field-label" for="password">Password</label>
+          <input class="field-input" id="password" name="password" type="password" placeholder="********" required>
+        </div>
+
+        <div class="actions-row">
+          <span>Forgotten access? <a class="link" href="/forgot-password">Reset here</a></span>
+          <a class="link" href="/register">Register</a>
+        </div>
+
+        <button class="primary-btn" type="submit" id="signInBtn">Sign in</button>
+      </form>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+      {% if error %}<div class="error-text">{{ error }}</div>{% endif %}
+
+      <div class="helper-row">
+        Prefer a specific portal?
+        <a class="link" href="/admin/login">Admin</a> ·
+        <a class="link" href="/shop/login">Shop Owner</a> ·
+        <a class="link" href="/user/login">Customer</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Signing you in...</div>
+  <script>
+    const form = document.getElementById("loginForm");
+    const btn = document.getElementById("signInBtn");
+    const toast = document.getElementById("toast");
+
+    form.addEventListener("submit", () => {
+      btn.classList.add("loading");
+      toast.style.display = "block";
+      setTimeout(() => toast.style.display = "none", 2200);
+    });
+  </script>
+</body>
+</html>

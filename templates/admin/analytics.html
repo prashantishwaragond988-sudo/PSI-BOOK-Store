@@ -1,0 +1,96 @@
+{% extends "admin/base_admin.html" %}
+{% set page_title = "Analytics" %}
+{% block title %}Analytics | PSI Admin{% endblock %}
+
+{% block content %}
+<section class="grid grid-cols-4">
+  <div class="card metric">
+    <small>Orders ({{ analytics_days }}d)</small>
+    <strong>{{ analytics_api.summary.total_orders }}</strong>
+  </div>
+  <div class="card metric">
+    <small>Sales</small>
+    <strong>Rs {{ "%.2f"|format(analytics_api.summary.total_sales) }}</strong>
+  </div>
+  <div class="card metric">
+    <small>Admin Commission</small>
+    <strong>Rs {{ "%.2f"|format(analytics_api.summary.admin_commission_total) }}</strong>
+  </div>
+  <div class="card metric">
+    <small>Seller Payout</small>
+    <strong>Rs {{ "%.2f"|format(analytics_api.summary.shop_owner_payout_total) }}</strong>
+  </div>
+</section>
+
+<section class="card" style="margin-top:16px;">
+  <div class="section-title">
+    <h2>Reload Window</h2>
+  </div>
+  <form method="get" class="actions">
+    <input type="number" min="1" name="days" value="{{ analytics_days }}" style="max-width:160px;">
+    <button class="btn btn-primary" type="submit">Reload</button>
+  </form>
+</section>
+
+<section class="grid grid-cols-2" style="margin-top:16px;">
+  <div class="chart-wrap">
+    <div class="section-title">
+      <h3>Daily Sales</h3>
+    </div>
+    <canvas id="salesChart" height="200"></canvas>
+  </div>
+  <div class="chart-wrap">
+    <div class="section-title">
+      <h3>Commission vs Payout</h3>
+    </div>
+    <canvas id="commissionChart" height="200"></canvas>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function(){
+    if(typeof Chart === "undefined") return;
+    const sales = {{ analytics_api.sales_report|tojson }};
+    const commission = {{ analytics_api.commission_report.daily_sales|tojson }};
+    const labels = sales.map(row => row.date);
+    const salesData = sales.map(row => row.sales);
+
+    const salesCtx = document.getElementById("salesChart");
+    if(salesCtx){
+      new Chart(salesCtx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "Sales",
+            data: salesData,
+            borderColor: "#1ec8c8",
+            backgroundColor: "rgba(30,200,200,0.15)",
+            tension: 0.35,
+            fill: true,
+          }]
+        },
+        options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+      });
+    }
+
+    const commissionCtx = document.getElementById("commissionChart");
+    if(commissionCtx){
+      new Chart(commissionCtx, {
+        type: "bar",
+        data: {
+          labels: commission.map(row => row.date),
+          datasets: [{
+            label: "Sales",
+            data: commission.map(row => row.sales),
+            backgroundColor: "rgba(124,93,255,0.7)"
+          }]
+        },
+        options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+      });
+    }
+  })();
+</script>
+{% endblock %}

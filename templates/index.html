@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='l.css') }}">
+  
+    <script src="https://kit.fontawesome.com/50dabcf939.js" crossorigin="anonymous"></script>
+</head>
+<body class="zoom-in">
+    <div class="c">
+        <h2>User Login</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for category, message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endwith %}
+
+        <form method="POST" action="/login">
+            <div class="b">
+                <input type="text" name="value" required>
+                <label for="">Email or Mobile</label>
+                <i class="fa-solid fa-envelope"></i>
+            </div>
+            <div class="b">
+                <input type="password" name="password" required>
+                <label>Password</label>
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <p><input type="checkbox">Remember me
+            <a href="/forgot-password">Forget Password</a></p>
+            <input id="a" type="submit" value="Login">
+            <p>Don't have an account
+                <a href="/register">Register</a>
+            </p>
+            <p>
+                <a href="/admin/login">Admin Login</a> |
+                <a href="/shop/login">Shop Owner Login</a> |
+                <a href="/delivery/login">Delivery Login</a>
+            </p>
+        </form>
+    </div>
+
+    <script>
+     document.querySelector("form").addEventListener("submit", function(){
+    const btn = document.querySelector("input[type='submit']");
+    btn.classList.add("loading");
+    btn.value = "Please wait";
+     });
+   </script>
+
+</body>
+</html>

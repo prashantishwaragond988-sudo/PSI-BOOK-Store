@@ -1,0 +1,93 @@
+{% extends "admin/base_admin.html" %}
+{% set page_title = "Delivery" %}
+{% block title %}Delivery | PSI Admin{% endblock %}
+
+{% block content %}
+<section class="grid grid-cols-2">
+  <div class="card" id="add-agent">
+    <div class="section-title">
+      <h2>Add Delivery Agent</h2>
+      <span class="pill">Creates login</span>
+    </div>
+    <form id="delivery-add-form" class="form-grid">
+      <input name="name" placeholder="Full name">
+      <input name="email" placeholder="Email" required>
+      <input name="phone" placeholder="Phone">
+      <input name="password" type="password" placeholder="Password (required for new)">
+      <div class="actions" style="grid-column:1/-1">
+        <button class="btn btn-primary" type="submit">Save Agent</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card table-card">
+    <header class="section-title">
+      <h2>Delivery Agents</h2>
+      <span class="pill">{{ delivery_agents|length }} active</span>
+    </header>
+    <table>
+      <thead>
+        <tr><th>User</th><th>Email</th><th>Phone</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for agent in delivery_agents %}
+        <tr>
+          <td>
+            <div>{{ agent.name or "-" }}</div>
+            <div class="mono">{{ agent.user_id }}</div>
+          </td>
+          <td>{{ agent.email }}</td>
+          <td>{{ agent.phone or agent.mobile or "-" }}</td>
+          <td><span class="pill {{ 'ok' if agent.status=='ACTIVE' else 'warn' }}">{{ agent.status }}</span></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4">No delivery agents found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card table-card" style="margin-top:16px;" id="cash">
+  <header class="section-title">
+    <h2>Delivery Cash Handovers</h2>
+    <span class="pill">{{ cash_handovers|length }} rows</span>
+  </header>
+  <table>
+    <thead>
+      <tr>
+        <th>Order</th>
+        <th>Agent</th>
+        <th>Collected</th>
+        <th>Status</th>
+        <th>Collected At</th>
+        <th>Submitted</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for handover in cash_handovers %}
+      <tr>
+        <td class="mono">{{ handover.order_id }}</td>
+        <td class="mono">{{ handover.delivery_agent_id or "-" }}</td>
+        <td>Rs {{ "%.2f"|format(handover.collected_amount or 0) }}</td>
+        <td>{{ handover.collection_status or "-" }}</td>
+        <td>{{ handover.collected_at or "-" }}</td>
+        <td>{{ handover.submitted_to_admin_at or "-" }}</td>
+        <td>
+          {% if handover.collection_status == "SUBMITTED_TO_ADMIN" %}
+          <button class="btn btn-success" data-action="confirm-cash" data-order-id="{{ handover.order_id }}">Confirm</button>
+          {% elif handover.collection_status == "RECEIVED_BY_ADMIN" %}
+          <span class="pill ok">Received</span>
+          {% else %}
+          <span class="pill">Waiting</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7">No cash handovers.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

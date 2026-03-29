@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delivery Duty Dashboard</title>
+  <style>
+    :root{
+      --ink:#0f2144;
+      --muted:#5e7396;
+      --card:#fff;
+      --line:#d7e4fa;
+      --blue:#1f5fe0;
+      --green:#14995a;
+      --orange:#d2691e;
+      --red:#cc3b31;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Segoe UI,Tahoma,sans-serif;
+      color:var(--ink);
+      background:linear-gradient(160deg,#dbeafe,#ecfeff);
+    }
+    header{
+      position:sticky;
+      top:0;
+      z-index:4;
+      background:linear-gradient(130deg,#153a9d,#1f5fe0);
+      color:#fff;
+      padding:12px 14px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      box-shadow:0 10px 24px rgba(7,25,70,.28);
+    }
+    header a{
+      color:#fff;
+      text-decoration:none;
+      padding:8px 10px;
+      border-radius:9px;
+      background:rgba(255,255,255,.16);
+      border:1px solid rgba(255,255,255,.35);
+      font-size:13px;
+      font-weight:700;
+    }
+    main{
+      max-width:1280px;
+      margin:14px auto 22px;
+      padding:0 12px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:14px;
+      box-shadow:0 10px 24px rgba(14,36,82,.13);
+      padding:12px;
+      margin-bottom:10px;
+    }
+    .muted{color:var(--muted);font-size:13px}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+    th,td{
+      border-bottom:1px solid #e3ebfb;
+      padding:7px;
+      vertical-align:top;
+      text-align:left;
+    }
+    th{
+      background:#eef4ff;
+      font-size:12px;
+      text-transform:uppercase;
+    }
+    .mono{font-family:Consolas,"Courier New",monospace;font-size:12px;word-break:break-all}
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+    .btn{
+      border:0;
+      border-radius:8px;
+      padding:7px 9px;
+      cursor:pointer;
+      color:#fff;
+      font-size:12px;
+      font-weight:800;
+      box-shadow:0 5px 0 rgba(11,34,86,.3);
+    }
+    .btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(11,34,86,.3)}
+    .btn-blue{background:var(--blue)}
+    .btn-green{background:var(--green)}
+    .btn-orange{background:var(--orange)}
+    .btn-red{background:var(--red)}
+    .input-amount{
+      width:120px;
+      border:1px solid #ccdcf9;
+      border-radius:8px;
+      padding:6px;
+      font-size:12px;
+    }
+    .status-pill{
+      display:inline-block;
+      border-radius:999px;
+      background:#eef4ff;
+      color:#173b78;
+      padding:2px 8px;
+      font-size:11px;
+      font-weight:800;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div><b>Delivery Duty Dashboard</b></div>
+      <div class="muted" style="color:#dce7ff">Agent: {{ agent.name or "-" }} | ID: {{ agent.user_id or "-" }}</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a href="/delivery/dashboard">Refresh</a>
+      <a href="/delivery/logout">Logout</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2 style="margin:0 0 8px">Assigned Work</h2>
+      <div class="muted">Steps: Accept -> Picked Up -> Out for Delivery -> Delivered -> Collect Amount -> Submit Cash To Admin</div>
+    </section>
+
+    <section class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Delivery Status</th>
+            <th>Order Status</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Collect</th>
+            <th>Payment</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in deliveries %}
+          {% set order = row.order if row.order else {} %}
+          <tr>
+            <td class="mono">{{ row.order_id or row.delivery_id }}</td>
+            <td><span class="status-pill">{{ row.status or "ASSIGNED" }}</span></td>
+            <td><span class="status-pill">{{ order.order_status or "-" }}</span></td>
+            <td class="mono">{{ order.user_id or "-" }}</td>
+            <td>Rs {{ "%.2f"|format(order.total_price or 0) }}</td>
+            <td>
+              Rs {{ "%.2f"|format(order.amount_to_collect or 0) }}
+            </td>
+            <td>
+              {{ order.payment_status or "-" }}<br>
+              <span class="muted">{{ order.cash_collection_status or "-" }}</span>
+            </td>
+            <td>
+              <div class="actions">
+                <button class="btn btn-blue" onclick="postAction('/delivery/accept',{order_id:{{ (row.order_id or row.delivery_id)|tojson }}}, true)">Accept</button>
+                <button class="btn btn-blue" onclick="postAction('/delivery/update-status',{order_id:{{ (row.order_id or row.delivery_id)|tojson }},status:'PICKED_UP'}, true)">Picked Up</button>
+                <button class="btn btn-blue" onclick="postAction('/delivery/update-status',{order_id:{{ (row.order_id or row.delivery_id)|tojson }},status:'OUT_FOR_DELIVERY'}, true)">Out For Delivery</button>
+                <button class="btn btn-green" onclick="postAction('/delivery/update-status',{order_id:{{ (row.order_id or row.delivery_id)|tojson }},status:'DELIVERED'}, true)">Delivered</button>
+              </div>
+              <div class="actions" style="margin-top:6px">
+                <input class="input-amount" id="amt_{{ row.order_id or row.delivery_id }}" type="number" step="0.01" min="0" value="{{ '%.2f'|format(order.amount_to_collect or order.total_price or 0) }}">
+                <button class="btn btn-orange" onclick="collectPayment({{ (row.order_id or row.delivery_id)|tojson }})">Collect Amount</button>
+                <button class="btn btn-red" onclick="postAction('/delivery/submit-cash',{order_id:{{ (row.order_id or row.delivery_id)|tojson }}}, true)">Submit Cash</button>
+              </div>
+              <div class="actions" style="margin-top:6px">
+                <button class="btn btn-blue" onclick="sendGps({{ (row.order_id or row.delivery_id)|tojson }})">Send GPS</button>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8">No assigned deliveries found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    async function postAction(url, payload, reloadAfter){
+      try{
+        const res = await fetch(url,{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Accept':'application/json'},
+          body:JSON.stringify(payload || {})
+        });
+        const out = await res.json();
+        if(!out.success){
+          alert(out.error || 'Action failed');
+          return;
+        }
+        if(reloadAfter){
+          setTimeout(() => location.reload(), 400);
+        }
+      }catch(e){
+        alert('Request failed');
+      }
+    }
+
+    async function collectPayment(orderId){
+      const el = document.getElementById('amt_' + orderId);
+      const amount = el ? el.value : '';
+      await postAction('/delivery/collect-payment',{order_id:orderId,amount:amount}, true);
+    }
+
+    async function sendGps(orderId){
+      if(!navigator.geolocation){
+        alert('Geolocation not supported');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        await postAction('/update-location',{
+          order_id:orderId,
+          latitude:pos.coords.latitude,
+          longitude:pos.coords.longitude,
+          timestamp:new Date().toISOString()
+        }, false);
+        alert('GPS location sent');
+      }, () => {
+        alert('Unable to read GPS');
+      });
+    }
+  </script>
+</body>
+</html>

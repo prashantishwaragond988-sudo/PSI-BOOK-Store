@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Select Address</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{
+      margin:0;
+      font-family:'Poppins',sans-serif;
+      background:#eef3fb;
+      color:#1f2937;
+    }
+    :root{
+      --lift: 5px;
+      --lift-shadow: rgba(11,29,76,.28);
+    }
+    .menu-bar{
+      background:#0f4aa8;
+      color:white;
+      padding:12px 16px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .menu-title{
+      font-size:18px;
+      font-weight:700;
+    }
+    .menu-links{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .menu-links a{
+      color:white;
+      text-decoration:none;
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.24);
+      padding:8px 12px;
+      border-radius:8px;
+      font-size:13px;
+    }
+    .menu-links a,
+    .btn{
+      transform:translateY(0);
+      box-shadow:0 var(--lift) 0 var(--lift-shadow);
+      transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+    .menu-links a:hover,
+    .btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 calc(var(--lift) + 2px) 0 var(--lift-shadow);
+      filter:brightness(1.04);
+    }
+    .menu-links a:active,
+    .btn:active{
+      transform:translateY(2px);
+      box-shadow:0 2px 0 var(--lift-shadow);
+    }
+    .wrap{
+      max-width:1120px;
+      margin:16px auto;
+      padding:0 12px;
+      display:grid;
+      grid-template-columns:1.2fr .8fr;
+      gap:14px;
+    }
+    .card{
+      background:white;
+      border-radius:14px;
+      box-shadow:0 10px 24px rgba(0,0,0,.08);
+      padding:16px;
+    }
+    h2,h3{
+      margin:0 0 10px;
+    }
+    .muted{
+      color:#6b7280;
+      font-size:13px;
+      margin-bottom:8px;
+    }
+    .address-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .address-item{
+      border:1px solid #dbe4f2;
+      border-radius:12px;
+      padding:12px;
+      background:#f8fbff;
+    }
+    .address-item.selected{
+      border-color:#1d4ed8;
+      background:#eef4ff;
+    }
+    .address-head{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom:6px;
+    }
+    .type-pill{
+      font-size:11px;
+      border-radius:999px;
+      padding:4px 8px;
+      background:#1d4ed8;
+      color:white;
+      font-weight:600;
+    }
+    .name{
+      font-weight:600;
+      font-size:14px;
+    }
+    .line{
+      font-size:13px;
+      color:#374151;
+      margin:3px 0;
+    }
+    .row{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-top:8px;
+      flex-wrap:wrap;
+    }
+    .btn{
+      border:none;
+      border-radius:8px;
+      padding:9px 12px;
+      cursor:pointer;
+      font-weight:600;
+      font-family:inherit;
+      font-size:13px;
+    }
+    .btn-blue{background:#1d4ed8;color:white}
+    .btn-green{background:#16a34a;color:white}
+    .btn-gray{background:#eef2f7;color:#1f2937}
+    .btn:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
+    label{
+      display:block;
+      font-size:13px;
+      font-weight:600;
+      margin-bottom:6px;
+    }
+    input,select{
+      width:100%;
+      box-sizing:border-box;
+      border:1px solid #cfd8e5;
+      border-radius:8px;
+      padding:10px;
+      font-family:inherit;
+      font-size:14px;
+      margin-bottom:10px;
+      background:white;
+    }
+    .grid2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+    }
+    .status{
+      min-height:20px;
+      font-size:13px;
+      margin-top:8px;
+    }
+    .ok{color:#15803d}
+    .err{color:#b91c1c}
+    @media (max-width:920px){
+      .wrap{
+        grid-template-columns:1fr;
+      }
+      .grid2{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="menu-bar">
+    <div class="menu-title">Choose Delivery Address</div>
+    <div class="menu-links">
+      <a href="/store">Store Home</a>
+      <a href="/wishlist">Wishlist</a>
+      <a href="/orders">My Orders</a>
+      <a href="/profile">Profile</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <h2>Saved Addresses</h2>
+      <div class="muted">Select one address to continue to payment.</div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="status {{ 'ok' if category=='success' else 'err' }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      <div id="addressList" class="address-list"></div>
+      <div class="row" style="margin-top:12px">
+        <button id="continueBtn" class="btn btn-green" type="button">Continue To Payment</button>
+      </div>
+      <div id="addressStatus" class="status"></div>
+    </div>
+
+    <div class="card">
+      <h3>Add New Address</h3>
+      <form id="addressForm">
+        <label for="addressType">Address Type</label>
+        <select id="addressType">
+          <option value="Home">Home</option>
+          <option value="Work">Work</option>
+          <option value="Other">Other</option>
+        </select>
+
+        <label for="fullName">Full Name</label>
+        <input id="fullName" type="text" required>
+
+        <div class="grid2">
+          <div>
+            <label for="mobile">Mobile</label>
+            <input id="mobile" type="text" required>
+          </div>
+          <div>
+            <label for="pin">Pincode</label>
+            <input id="pin" type="text" required>
+          </div>
+        </div>
+
+        <label for="city">City</label>
+        <input id="city" type="text" required>
+
+        <label for="street">Street Address</label>
+        <input id="street" type="text" required>
+
+        <label for="landmark">Landmark (Optional)</label>
+        <input id="landmark" type="text">
+
+        <button class="btn btn-blue" type="submit">Save Address</button>
+      </form>
+      <div id="saveStatus" class="status"></div>
+    </div>
+  </div>
+
+  <script>
+    let selectedAddressId = "{{ selected_address_id or '' }}";
+    const addressListEl = document.getElementById("addressList");
+    const continueBtn = document.getElementById("continueBtn");
+    const addressStatusEl = document.getElementById("addressStatus");
+    const saveStatusEl = document.getElementById("saveStatus");
+    const addressForm = document.getElementById("addressForm");
+
+    function setStatus(el, message, ok){
+      el.textContent = message || "";
+      el.className = "status " + (ok ? "ok" : "err");
+    }
+
+    function addressText(row){
+      const parts = [
+        row.street || "",
+        row.landmark || "",
+        row.city || "",
+        row.pincode || ""
+      ].map((x) => (x || "").toString().trim()).filter(Boolean);
+      return parts.join(", ");
+    }
+
+    function renderAddresses(rows){
+      addressListEl.innerHTML = "";
+      if(!Array.isArray(rows) || rows.length === 0){
+        addressListEl.innerHTML = "<div class='muted'>No saved addresses yet. Add one to continue.</div>";
+        continueBtn.disabled = true;
+        return;
+      }
+
+      if(!selectedAddressId){
+        selectedAddressId = rows[0].id;
+      }
+
+      rows.forEach((row) => {
+        const item = document.createElement("div");
+        item.className = "address-item" + (row.id === selectedAddressId ? " selected" : "");
+
+        const head = document.createElement("div");
+        head.className = "address-head";
+
+        const left = document.createElement("div");
+        left.innerHTML =
+          "<label style='display:flex;gap:8px;align-items:center;cursor:pointer'>" +
+          "<input type='radio' name='selectedAddress' " + (row.id === selectedAddressId ? "checked" : "") + ">" +
+          "<span class='name'>" + (row.fullname || "-") + " (" + (row.mobile || "-") + ")</span>" +
+          "</label>";
+        const radio = left.querySelector("input");
+        radio.addEventListener("change", () => selectAddress(row.id));
+
+        const type = document.createElement("span");
+        type.className = "type-pill";
+        type.textContent = row.address_type || "Home";
+
+        head.appendChild(left);
+        head.appendChild(type);
+
+        const line = document.createElement("div");
+        line.className = "line";
+        line.textContent = addressText(row);
+
+        const controls = document.createElement("div");
+        controls.className = "row";
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn " + (row.id === selectedAddressId ? "btn-gray" : "btn-blue");
+        btn.textContent = row.id === selectedAddressId ? "Selected" : "Deliver Here";
+        btn.disabled = row.id === selectedAddressId;
+        btn.addEventListener("click", () => selectAddress(row.id));
+        controls.appendChild(btn);
+
+        item.appendChild(head);
+        item.appendChild(line);
+        item.appendChild(controls);
+        addressListEl.appendChild(item);
+      });
+
+      continueBtn.disabled = !selectedAddressId;
+    }
+
+    async function loadAddresses(){
+      try{
+        const r = await fetch("/api/address");
+        if(r.redirected){ setStatus(addressStatusEl, "Please login again.", false); return; }
+        const data = await r.json();
+        if(data.error){
+          setStatus(addressStatusEl, data.error, false);
+          return;
+        }
+        selectedAddressId = data.selected_address_id || selectedAddressId || "";
+        renderAddresses(Array.isArray(data.addresses) ? data.addresses : []);
+      }catch(e){
+        setStatus(addressStatusEl, "Unable to load addresses.", false);
+      }
+    }
+
+    async function selectAddress(id){
+      try{
+        const r = await fetch("/api/address/select", {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({address_id:id})
+        });
+        if(r.redirected){ setStatus(addressStatusEl, "Please login again.", false); return false; }
+        const data = await r.json();
+        if(data.error){
+          setStatus(addressStatusEl, data.error, false);
+          return false;
+        }
+        selectedAddressId = data.address_id || id;
+        setStatus(addressStatusEl, "Address selected.", true);
+        await loadAddresses();
+        return true;
+      }catch(e){
+        setStatus(addressStatusEl, "Unable to select address.", false);
+        return false;
+      }
+    }
+
+    async function saveAddress(e){
+      e.preventDefault();
+      const payload = {
+        address_type: document.getElementById("addressType").value,
+        fullname: document.getElementById("fullName").value.trim(),
+        mobile: document.getElementById("mobile").value.trim(),
+        city: document.getElementById("city").value.trim(),
+        pincode: document.getElementById("pin").value.trim(),
+        street: document.getElementById("street").value.trim(),
+        landmark: document.getElementById("landmark").value.trim(),
+        is_default: !selectedAddressId
+      };
+      if(!payload.fullname || !payload.mobile || !payload.city || !payload.pincode || !payload.street){
+        setStatus(saveStatusEl, "Please fill all required fields.", false);
+        return;
+      }
+
+      try{
+        const r = await fetch("/api/address",{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify(payload)
+        });
+        if(r.redirected){ setStatus(saveStatusEl, "Please login again.", false); return; }
+        const data = await r.json();
+        if(data.error){
+          setStatus(saveStatusEl, data.error, false);
+          return;
+        }
+        setStatus(saveStatusEl, "Address saved.", true);
+        addressForm.reset();
+        selectedAddressId = data.address_id || selectedAddressId;
+        await loadAddresses();
+      }catch(e2){
+        setStatus(saveStatusEl, "Unable to save address.", false);
+      }
+    }
+
+    continueBtn.addEventListener("click", async () => {
+      if(!selectedAddressId){
+        setStatus(addressStatusEl, "Please select an address first.", false);
+        return;
+      }
+      const ok = await selectAddress(selectedAddressId);
+      if(!ok){
+        return;
+      }
+      window.location = "/user/payment";
+    });
+
+    addressForm.addEventListener("submit", saveAddress);
+    loadAddresses();
+  </script>
+</body>
+</html>

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+<style>
+body{
+  font-family:'Poppins',sans-serif;
+  margin:0;
+  background:#f4f7fb;
+  color:#1f2937;
+}
+:root{
+  --lift: 5px;
+  --lift-shadow: rgba(11,29,76,.28);
+}
+
+.menu-bar{
+  background:#0f4aa8;
+  color:white;
+  padding:12px 16px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.menu-title{
+  font-size:18px;
+  font-weight:700;
+}
+
+.menu-links{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.menu-links a{
+  color:white;
+  text-decoration:none;
+  background:rgba(255,255,255,0.14);
+  border:1px solid rgba(255,255,255,0.24);
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:13px;
+}
+.menu-links a,
+button,
+.link-btn{
+  transform:translateY(0);
+  box-shadow:0 var(--lift) 0 var(--lift-shadow);
+  transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+.menu-links a:hover,
+button:hover,
+.link-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 calc(var(--lift) + 2px) 0 var(--lift-shadow);
+  filter:brightness(1.04);
+}
+.menu-links a:active,
+button:active,
+.link-btn:active{
+  transform:translateY(2px);
+  box-shadow:0 2px 0 var(--lift-shadow);
+}
+
+.container{
+  padding:16px;
+}
+
+.meta{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+
+.pill{
+  background:white;
+  border:1px solid #dce4ef;
+  border-radius:999px;
+  padding:8px 12px;
+  font-size:13px;
+}
+
+.card{
+  background:white;
+  border-radius:12px;
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
+  padding:16px;
+  margin-bottom:14px;
+}
+
+h3{
+  margin:0 0 12px;
+}
+
+form{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+}
+
+input,select{
+  border:1px solid #cfd8e5;
+  border-radius:8px;
+  padding:9px;
+}
+
+button{
+  border:none;
+  border-radius:8px;
+  padding:9px 12px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.btn-blue{background:#1d4ed8;color:white}
+.btn-green{background:#16a34a;color:white}
+.btn-red{background:#dc2626;color:white}
+.btn-orange{background:#ea580c;color:white}
+.link-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+}
+.search-input{
+  min-width:220px;
+}
+
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th{
+  background:#1d4ed8;
+  color:white;
+  text-align:left;
+  padding:10px;
+}
+
+td{
+  padding:10px;
+  border-bottom:1px solid #e8edf4;
+  vertical-align:top;
+}
+
+.small{
+  font-size:12px;
+  color:#555;
+}
+
+.ok{color:#15803d;font-weight:600}
+.blocked{color:#b91c1c;font-weight:600}
+
+@media (max-width:760px){
+  .container{padding:10px}
+  table{font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="menu-bar">
+  <div class="menu-title">Book Store Admin</div>
+  <div class="menu-links">
+    <a href="/store">Store Home</a>
+    <a href="/admin">Dashboard</a>
+    <a href="/add-book">Add Books</a>
+    <a href="/orders">My Orders</a>
+    <a href="/profile">Profile</a>
+    <a href="/logout">Logout</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="meta">
+    <div class="pill">Store: <b>{{ active_store_name }}</b></div>
+    <div class="pill">Role: <b>{{ current_role_label }}</b></div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="card">
+        {% for category, message in messages %}
+          <div style="margin:6px 0;color:{{ 'green' if category=='success' else 'red' }};">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="card">
+    <h3>Active Store</h3>
+    <form onsubmit="switchStore(event)">
+      <input id="store_id_search" class="search-input" placeholder="Search store name...">
+      <select id="store_id" required>
+        {% for s in stores %}
+          <option value="{{ s.id }}" {% if s.id == active_store_id %}selected{% endif %}>{{ s.name }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn-blue" type="submit">Switch Store</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Store Owner Actions</h3>
+    <div class="actions">
+      {% if can_manage_books %}
+        <a class="btn-green link-btn" href="/add-book">Add Books</a>
+      {% endif %}
+      {% if can_manage_books %}
+        <button class="btn-red" type="button" onclick="document.getElementById('booksCurrent').scrollIntoView({behavior:'smooth'})">Remove Books</button>
+      {% endif %}
+      {% if can_view_orders %}
+        <button class="btn-blue" type="button" onclick="document.getElementById('ordersSection').scrollIntoView({behavior:'smooth'})">See Orders</button>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if owner_notifications %}
+  <div class="card">
+    <h3>Order Messages For Store Owner</h3>
+    <table>
+      <tr>
+        <th>Store</th>
+        <th>Time</th>
+        <th>Order</th>
+        <th>User</th>
+        <th>Books</th>
+        <th>Address</th>
+        {% if is_super_admin %}<th>Payment</th>{% endif %}
+      </tr>
+      {% for n in owner_notifications %}
+      <tr>
+        <td>{{ n.store_name or n.store_id }}</td>
+        <td>{{ n.time }}</td>
+        <td>{{ n.order_id }}</td>
+        <td>{{ n.user }}</td>
+        <td>{{ n.books_text }}</td>
+        <td>{{ n.address_text }}</td>
+        {% if is_super_admin %}<td>{{ n.payment_method or 'handled by admin' }}</td>{% endif %}
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+
+  {% if can_manage_stores %}
+  <div class="card">
+    <h3>Store Management (Super Admin)</h3>
+    <form onsubmit="createStore(event)">
+      <input id="new_store_name" placeholder="Store name" required>
+      <input id="new_owner_email" placeholder="Owner email (optional)">
+      <button class="btn-green" type="submit">Create Store</button>
+    </form>
+    <form onsubmit="disableStore(event)" style="margin-top:10px;">
+      <input id="delete_store_search" class="search-input" placeholder="Search store to disable...">
+      <select id="delete_store_id" required>
+        {% for s in stores %}
+          <option value="{{ s.id }}" {% if s.id == active_store_id %}selected{% endif %}>{{ s.name }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn-red" type="submit">Disable Store</button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if can_manage_owners %}
+  <div class="card">
+    <h3>Assign Store Owner</h3>
+    <form method="POST" action="/assign-owner">
+      <input type="email" name="email" placeholder="Owner email" required>
+      <input id="assign_store_search" class="search-input" placeholder="Search store for owner...">
+      <select id="assign_owner_store_id" name="store_id" required>
+        {% for s in stores %}
+          <option value="{{ s.id }}" {% if s.id == active_store_id %}selected{% endif %}>{{ s.name }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn-blue">Assign Owner</button>
+    </form>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h3>Store Owners</h3>
+    <table>
+      <tr>
+        <th>Email</th>
+        <th>Store</th>
+        <th>Status</th>
+        {% if can_manage_owners %}<th>Access</th>{% endif %}
+      </tr>
+      {% for row in owners %}
+      <tr>
+        <td>{{ row.email }}</td>
+        <td>{{ row.store_name }} <div class="small">{{ row.store_id }}</div></td>
+        <td>{% if row.active %}<span class="ok">Allowed</span>{% else %}<span class="blocked">Blocked</span>{% endif %}</td>
+        {% if can_manage_owners %}
+        <td>
+          <form method="POST" action="/set-owner-access">
+            <input type="hidden" name="email" value="{{ row.email }}">
+            <input type="hidden" name="store_id" value="{{ row.store_id }}">
+            {% if row.active %}
+              <input type="hidden" name="action" value="block">
+              <button class="btn-orange" type="submit">Block</button>
+            {% else %}
+              <input type="hidden" name="action" value="allow">
+              <button class="btn-green" type="submit">Allow</button>
+            {% endif %}
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  {% if can_manage_categories %}
+  <div class="card">
+    <h3>Categories (Shared For Store Owners)</h3>
+    <form method="POST" action="/add-category">
+      <input type="text" name="name" placeholder="Category name" required>
+      <button class="btn-green">Add Category</button>
+    </form>
+    <div style="margin-top:12px">
+      {% for c in categories %}
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <div>
+            {{ c.name }}
+            <span class="small">(store: {{ c.store_id or '-' }})</span>
+          </div>
+          {% if is_super_admin or c.store_id == active_store_id %}
+          <a class="btn-red link-btn" href="/delete-category/{{ c.id }}">Delete</a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card" id="booksCurrent">
+    <h3>Books - Current Store</h3>
+    <table>
+      <tr>
+        <th>Title</th>
+        <th>Author</th>
+        <th>Price</th>
+        <th>Category</th>
+        {% if can_manage_books %}<th>Action</th>{% endif %}
+      </tr>
+      {% for b in books %}
+      <tr>
+        <td>{{ b.title }}</td>
+        <td>{{ b.author or '-' }}</td>
+        <td>Rs {{ b.price }}</td>
+        <td>{{ b.category or '-' }}</td>
+        {% if can_manage_books %}
+        <td>
+          <form method="POST" action="/update-book-price/{{ b.id }}" style="display:inline-flex;gap:6px;align-items:center;margin-right:8px;">
+            <input type="number" min="0" step="1" name="price" value="{{ b.price }}" style="width:90px;">
+            <button class="btn-blue" type="submit">Update</button>
+          </form>
+          <a class="btn-red link-btn" href="/delete-book/{{ b.id }}">Delete</a>
+        </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Books - All Stores</h3>
+    <table>
+      <tr>
+        <th>Store</th>
+        <th>Title</th>
+        <th>Author</th>
+        <th>Price</th>
+      </tr>
+      {% for b in books_all %}
+      <tr>
+        <td>{{ b.store_name }}</td>
+        <td>{{ b.title }}</td>
+        <td>{{ b.author or '-' }}</td>
+        <td>Rs {{ b.price }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="card" id="ordersSection">
+    <h3>Orders - Current Store</h3>
+    <table>
+      <tr>
+        <th>Order ID</th>
+        <th>User</th>
+        <th>Total</th>
+        {% if is_super_admin %}
+        <th>Payment</th>
+        <th>Status</th>
+        {% endif %}
+        <th>Time</th>
+        <th>Address</th>
+      </tr>
+      {% for o in store_orders %}
+      <tr>
+        <td>{{ o.id }}</td>
+        <td>{{ o.user }}</td>
+        <td>Rs {{ o.total }}</td>
+        {% if is_super_admin %}
+        <td>{{ o.payment_method }}</td>
+        <td>{{ o.payment_status }}</td>
+        {% endif %}
+        <td>{{ o.time }}</td>
+        <td>{{ (o.address.get('street','') ~ ', ' ~ o.address.get('city','') ~ ', ' ~ o.address.get('pincode','')) if o.address else '-' }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  {% if is_super_admin %}
+  <div class="card">
+    <h3>Orders - All Stores (Super Admin)</h3>
+    <table>
+      <tr>
+        <th>Store</th>
+        <th>Order ID</th>
+        <th>User</th>
+        <th>Total</th>
+        <th>Payment</th>
+        <th>Status</th>
+        <th>Time</th>
+      </tr>
+      {% for o in all_orders %}
+      <tr>
+        <td>{{ o.store_name }}</td>
+        <td>{{ o.id }}</td>
+        <td>{{ o.user }}</td>
+        <td>Rs {{ o.total }}</td>
+        <td>{{ o.payment_method }}</td>
+        <td>{{ o.payment_status }}</td>
+        <td>{{ o.time }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+
+  {% if is_super_admin %}
+  <div class="card">
+    <h3>All Users (Super Admin)</h3>
+    <table>
+      <tr>
+        <th>Email</th>
+        <th>Mobile</th>
+        <th>Global Role</th>
+        <th>Store Owner Mapping</th>
+      </tr>
+      {% for u in users_all %}
+      <tr>
+        <td>{{ u.email }}</td>
+        <td>{{ u.mobile or '-' }}</td>
+        <td>{% if u.is_admin == 1 %}superadmin{% else %}{{ u.global_role }}{% endif %}</td>
+        <td>
+          {% if u.owners %}
+            {% for o in u.owners %}
+              <div>{{ o.store_name }} - {% if o.active %}<span class="ok">allowed</span>{% else %}<span class="blocked">blocked</span>{% endif %}</div>
+            {% endfor %}
+          {% else %}
+            -
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function makeSelectSearch(selectId, inputId){
+  const select = document.getElementById(selectId);
+  const input = document.getElementById(inputId);
+  if(!select || !input){
+    return;
+  }
+  const source = Array.from(select.options).map((opt) => ({
+    value: opt.value,
+    text: opt.textContent || "",
+  }));
+  const original = select.value;
+
+  function render(){
+    const q = input.value.trim().toLowerCase();
+    const keep = select.value || original;
+    select.innerHTML = "";
+    source
+      .filter((row) => !q || row.text.toLowerCase().includes(q))
+      .forEach((row) => {
+        const opt = document.createElement("option");
+        opt.value = row.value;
+        opt.textContent = row.text;
+        select.appendChild(opt);
+      });
+    if(!select.options.length){
+      const empty = document.createElement("option");
+      empty.value = "";
+      empty.textContent = "No matching store";
+      select.appendChild(empty);
+    }
+    if(Array.from(select.options).some((opt) => opt.value === keep)){
+      select.value = keep;
+    }
+  }
+
+  input.addEventListener("input", render);
+  render();
+}
+
+function switchStore(e){
+  e.preventDefault();
+  const storeId = document.getElementById("store_id").value;
+  fetch("/api/stores/select", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({store_id:storeId})
+  })
+  .then(r => r.json())
+  .then(data => {
+    if(data.error){ alert(data.error); return; }
+    location.reload();
+  });
+}
+
+function createStore(e){
+  e.preventDefault();
+  const name = document.getElementById("new_store_name").value.trim();
+  const ownerEmail = document.getElementById("new_owner_email").value.trim();
+  fetch("/api/stores", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({name:name, owner_email:ownerEmail})
+  })
+  .then(r => r.json())
+  .then(data => {
+    if(data.error){ alert(data.error); return; }
+    alert("Store created: " + data.store_id);
+    location.reload();
+  });
+}
+
+function disableStore(e){
+  e.preventDefault();
+  const storeId = document.getElementById("delete_store_id").value;
+  fetch("/api/stores/delete", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({store_id:storeId})
+  })
+  .then(r => r.json())
+  .then(data => {
+    if(data.error){ alert(data.error); return; }
+    alert("Store disabled");
+    location.reload();
+  });
+}
+
+makeSelectSearch("store_id", "store_id_search");
+makeSelectSearch("delete_store_id", "delete_store_search");
+makeSelectSearch("assign_owner_store_id", "assign_store_search");
+</script>
+</body>
+</html>

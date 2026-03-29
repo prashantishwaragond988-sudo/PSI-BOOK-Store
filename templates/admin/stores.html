@@ -1,0 +1,119 @@
+{% extends "admin/base_admin.html" %}
+{% set page_title = "Stores" %}
+{% block title %}Stores | PSI Admin{% endblock %}
+
+{% block content %}
+<section class="grid grid-cols-2">
+  <div class="card">
+    <div class="section-title">
+      <h2>Pending / Active Stores</h2>
+      <div class="pill">{{ stores|length }} records</div>
+    </div>
+    <form method="get" class="actions" style="margin-bottom:10px;">
+      <input name="q" placeholder="Search by name / owner / store id" value="{{ store_query or '' }}" style="max-width:280px;">
+      <button class="btn btn-primary" type="submit">Search</button>
+      {% if store_query %}
+      <a class="ghost-btn" href="/admin/stores">Clear</a>
+      {% endif %}
+    </form>
+    <div class="table-card">
+      <table id="stores-list">
+        <thead>
+          <tr>
+            <th>Store</th>
+            <th>Owner ID</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for store in stores %}
+          <tr>
+            <td>
+              <div>{{ store.name or "-" }}</div>
+              <div class="mono">{{ store.store_id }}</div>
+            </td>
+            <td class="mono">{{ store.owner_id or "-" }}</td>
+            <td><span class="pill {{ 'ok' if store.status=='APPROVED' else 'warn' }}">{{ store.status }}</span></td>
+            <td class="actions">
+              <button class="btn btn-success" data-action="approve-store" data-id="{{ store.store_id }}" data-status="APPROVED">Approve</button>
+              <button class="btn btn-danger" data-action="approve-store" data-id="{{ store.store_id }}" data-status="REJECTED">Reject</button>
+              <button class="btn btn-muted" data-action="remove-store" data-id="{{ store.store_id }}">Remove</button>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4">No stores found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" id="add-store">
+    <div class="section-title">
+      <h2>Create Store</h2>
+      <span class="pill">Instant approve</span>
+    </div>
+    <form id="store-add-form" class="form-grid" autocomplete="off">
+      <input name="name" placeholder="Store name" required>
+      <input name="owner_id" placeholder="Owner user ID (optional)">
+      <input name="phone" placeholder="Phone">
+      <input name="address" placeholder="Address">
+      <textarea name="description" placeholder="Short description"></textarea>
+      <div class="actions" style="grid-column:1/-1">
+        <button class="btn btn-primary" type="submit">Add Store</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section class="grid grid-cols-2" style="margin-top:18px;" id="owners">
+  <div class="card">
+    <div class="section-title">
+      <h2>Store Owners</h2>
+      <span class="pill">{{ shop_owners|length }} owners</span>
+    </div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr><th>User</th><th>Email</th><th>Phone</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for owner in shop_owners %}
+          <tr>
+            <td>
+              <div>{{ owner.name or "-" }}</div>
+              <div class="mono">{{ owner.user_id }}</div>
+            </td>
+            <td>{{ owner.email }}</td>
+            <td>{{ owner.phone or owner.mobile or "-" }}</td>
+            <td>
+              <button class="btn btn-danger" data-action="remove-owner" data-id="{{ owner.user_id }}">Remove</button>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4">No owners available.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" id="add-owner">
+    <div class="section-title">
+      <h2>Add / Upgrade Owner</h2>
+      <span class="pill">Creates role</span>
+    </div>
+    <form id="owner-add-form" class="form-grid">
+      <input name="name" placeholder="Owner name">
+      <input name="email" placeholder="Owner email" required>
+      <input name="phone" placeholder="Phone">
+      <input name="password" type="password" placeholder="Password (required for new)">
+      <input name="store_id" placeholder="Assign to store ID (optional)">
+      <div class="actions" style="grid-column:1/-1">
+        <button class="btn btn-primary" type="submit">Save Owner</button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

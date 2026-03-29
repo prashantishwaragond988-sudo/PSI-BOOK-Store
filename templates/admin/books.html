@@ -1,0 +1,39 @@
+{% extends "admin/base_admin.html" %}
+{% set page_title = "Books" %}
+{% block title %}Books | PSI Admin{% endblock %}
+
+{% block content %}
+<section class="card table-card">
+  <header class="section-title">
+    <h2>Books Catalog</h2>
+    <span class="pill">{{ books|length }} items</span>
+  </header>
+  <table>
+    <thead>
+      <tr>
+        <th>Book</th>
+        <th>Author</th>
+        <th>Price</th>
+        <th>Stock</th>
+        <th>Shop</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for book in books %}
+      <tr>
+        <td>
+          <div>{{ book.title or "-" }}</div>
+          <div class="mono">{{ book.book_id or book.id }}</div>
+        </td>
+        <td>{{ book.author or "-" }}</td>
+        <td>Rs {{ "%.2f"|format(book.price or 0) }}</td>
+        <td>{{ book.stock if book.stock is not none else "-" }}</td>
+        <td class="mono">{{ book.store_id or "-" }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5">No books found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

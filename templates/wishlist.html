@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wishlist</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{
+      margin:0;
+      font-family:'Poppins',sans-serif;
+      background:#eef3fb;
+      color:#1f2937;
+    }
+    :root{
+      --lift: 5px;
+      --lift-shadow: rgba(11,29,76,.28);
+    }
+    .menu-bar{
+      background:#0f4aa8;
+      color:white;
+      padding:12px 16px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .menu-title{
+      font-size:18px;
+      font-weight:700;
+    }
+    .menu-links{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .menu-links a{
+      color:white;
+      text-decoration:none;
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.24);
+      padding:8px 12px;
+      border-radius:8px;
+      font-size:13px;
+    }
+    .menu-links a,
+    .btn{
+      transform:translateY(0);
+      box-shadow:0 var(--lift) 0 var(--lift-shadow);
+      transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+    .menu-links a:hover,
+    .btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 calc(var(--lift) + 2px) 0 var(--lift-shadow);
+      filter:brightness(1.04);
+    }
+    .menu-links a:active,
+    .btn:active{
+      transform:translateY(2px);
+      box-shadow:0 2px 0 var(--lift-shadow);
+    }
+    .wrap{
+      max-width:1100px;
+      margin:18px auto;
+      padding:0 12px;
+    }
+    h2{
+      margin:0 0 12px;
+      font-size:24px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+      gap:14px;
+    }
+    .card{
+      background:white;
+      border-radius:12px;
+      box-shadow:0 10px 24px rgba(0,0,0,.09);
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .cover{
+      width:100%;
+      height:220px;
+      object-fit:cover;
+      border-radius:10px;
+      background:#f5f7fb;
+    }
+    .title{
+      font-weight:600;
+      margin:0;
+      min-height:40px;
+    }
+    .price{
+      margin:0;
+      color:#0f4aa8;
+      font-weight:700;
+    }
+    .btn{
+      border:none;
+      border-radius:8px;
+      padding:9px 10px;
+      cursor:pointer;
+      font-weight:600;
+      font-family:inherit;
+    }
+    .btn-row{
+      display:flex;
+      gap:8px;
+    }
+    .btn-red{background:#dc2626;color:white;flex:1}
+    .btn-blue{background:#1d4ed8;color:white;flex:1}
+    .empty{
+      background:white;
+      border-radius:12px;
+      box-shadow:0 8px 20px rgba(0,0,0,.08);
+      padding:16px;
+      color:#6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="menu-bar">
+    <div class="menu-title">My Wishlist</div>
+    <div class="menu-links">
+      <a href="/store">Store Home</a>
+      <a href="/checkout">Checkout</a>
+      <a href="/orders">My Orders</a>
+      <a href="/profile">Profile</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h2>Saved Books</h2>
+    <div id="wishlistBox" class="empty">Please wait, fetching wishlist...</div>
+  </div>
+
+  <script>
+    function imageSrc(value){
+      const raw = (value || "").toString().trim();
+      if(!raw){ return "/static/p1.jpg"; }
+      if(raw.startsWith("http://") || raw.startsWith("https://")){ return raw; }
+      let normalized = raw.replaceAll("\\", "/");
+      const lower = normalized.toLowerCase();
+
+      function encodePath(path){
+        return (path || "")
+          .split("/")
+          .filter((seg) => seg && seg.trim())
+          .map((seg) => {
+            try{
+              return encodeURIComponent(decodeURIComponent(seg));
+            }catch(_){
+              return encodeURIComponent(seg);
+            }
+          })
+          .join("/");
+      }
+
+      function relativeAfter(key){
+        const idx = lower.indexOf(key);
+        if(idx === -1){ return ""; }
+        return normalized.substring(idx + key.length);
+      }
+
+      const assetsRelative = relativeAfter("assets/books/");
+      if(assetsRelative){
+        return "/book-assets/" + encodePath(assetsRelative);
+      }
+
+      const bookAssetsRelative = relativeAfter("book-assets/");
+      if(bookAssetsRelative){
+        return "/book-assets/" + encodePath(bookAssetsRelative);
+      }
+
+      const staticRelative = relativeAfter("static/");
+      if(staticRelative){
+        return "/static/" + encodePath(staticRelative);
+      }
+
+      const filename = normalized.split("/").filter(Boolean).pop() || "p1.jpg";
+      return "/static/" + encodePath(filename);
+    }
+
+    async function removeWish(id){
+      await fetch("/api/wishlist/delete",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({book_id:id})
+      });
+      loadWishlist();
+    }
+
+    async function addCart(id){
+      const r = await fetch("/api/cart/add",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({book_id:id})
+      });
+      const data = await r.json();
+      if(data.error){
+        alert(data.error);
+        return;
+      }
+      alert("Added to cart");
+    }
+
+    function cardForBook(b){
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const img = document.createElement("img");
+      img.className = "cover";
+      img.src = imageSrc(b.image);
+      img.alt = b.title || "book";
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.onerror = () => {
+        if(img.dataset.fallback === "1"){ return; }
+        img.dataset.fallback = "1";
+        img.src = "/static/p1.jpg";
+      };
+      card.appendChild(img);
+
+      const title = document.createElement("p");
+      title.className = "title";
+      title.textContent = b.title || "Untitled";
+      card.appendChild(title);
+
+      const price = document.createElement("p");
+      price.className = "price";
+      price.textContent = "Rs " + String(b.price || 0);
+      card.appendChild(price);
+
+      const row = document.createElement("div");
+      row.className = "btn-row";
+
+      const cartBtn = document.createElement("button");
+      cartBtn.type = "button";
+      cartBtn.className = "btn btn-blue";
+      cartBtn.textContent = "Add Cart";
+      cartBtn.addEventListener("click", () => addCart(b.id));
+      row.appendChild(cartBtn);
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "btn btn-red";
+      removeBtn.textContent = "Remove";
+      removeBtn.addEventListener("click", () => removeWish(b.id));
+      row.appendChild(removeBtn);
+
+      card.appendChild(row);
+      return card;
+    }
+
+    function loadWishlist(){
+      fetch("/api/wishlist")
+        .then((r) => r.json())
+        .then((data) => {
+          const box = document.getElementById("wishlistBox");
+          box.innerHTML = "";
+          if(!Array.isArray(data) || data.length === 0){
+            box.className = "empty";
+            box.textContent = "Wishlist is empty.";
+            return;
+          }
+          box.className = "grid";
+          data.forEach((b) => box.appendChild(cardForBook(b)));
+        })
+        .catch(() => {
+          const box = document.getElementById("wishlistBox");
+          box.className = "empty";
+          box.textContent = "Unable to load wishlist.";
+        });
+    }
+
+    loadWishlist();
+  </script>
+</body>
+</html>

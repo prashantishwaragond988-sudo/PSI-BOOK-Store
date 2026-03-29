@@ -1,0 +1,27 @@
+{% extends "admin/base_admin.html" %}
+{% set page_title = "Profiles" %}
+{% block title %}Profiles | PSI Admin{% endblock %}
+
+{% block content %}
+<section class="card">
+  <div class="section-title">
+    <h2>People</h2>
+    <span class="pill">{{ profile_cards|length }} profiles</span>
+  </div>
+  <div class="profile-grid">
+    {% for profile in profile_cards %}
+    {% set photo = profile.photo or ('https://ui-avatars.com/api/?name=' ~ (profile.name|urlencode)) %}
+    <div class="profile-card">
+      <img src="{{ photo }}" alt="{{ profile.name }}">
+      <div>
+        <div class="name">{{ profile.name }}</div>
+        <div class="role">{{ profile.role }}</div>
+        <div class="mono">{{ profile.email }}</div>
+      </div>
+    </div>
+    {% else %}
+    <p>No profiles found.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

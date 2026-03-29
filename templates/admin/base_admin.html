@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>{% block title %}Admin | PSI Book Store{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="admin-shell">
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <div class="brand-dot"></div>
+      <span>PSI Admin</span>
+    </div>
+    <div class="sidebar__profile">
+      <div class="avatar">
+        <img src="{{ admin_profile.photo }}" alt="Admin avatar">
+      </div>
+      <div class="details">
+        <div class="name">{{ admin_profile.name }}</div>
+        <div class="email">{{ admin_profile.email }}</div>
+      </div>
+    </div>
+    <nav class="sidebar__nav">
+      <a class="nav-link {{ 'active' if active_page=='dashboard' else '' }}" href="/admin/dashboard">Dashboard</a>
+      <a class="nav-link {{ 'active' if active_page=='users' else '' }}" href="/admin/users">Users</a>
+      <a class="nav-link {{ 'active' if active_page=='stores' else '' }}" href="/admin/stores">Stores</a>
+      <a class="nav-link {{ 'active' if active_page=='books' else '' }}" href="/admin/books">Books</a>
+      <a class="nav-link {{ 'active' if active_page=='orders' else '' }}" href="/admin/orders">Orders</a>
+      <a class="nav-link {{ 'active' if active_page=='delivery' else '' }}" href="/admin/delivery">Delivery</a>
+      <a class="nav-link {{ 'active' if active_page=='payouts' else '' }}" href="/admin/payouts">Payouts</a>
+      <a class="nav-link {{ 'active' if active_page=='analytics' else '' }}" href="/admin/analytics">Analytics</a>
+      <a class="nav-link {{ 'active' if active_page=='profiles' else '' }}" href="/admin/profiles">Profiles</a>
+      <a class="nav-link logout" href="/role/logout">Logout</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">Admin Console</div>
+        <div class="page-title">{{ page_title or "Dashboard" }}</div>
+      </div>
+      <div class="top-actions">
+        <a class="ghost-btn" href="/admin/dashboard">Refresh</a>
+        <a class="primary-btn" href="/role/logout">Logout</a>
+      </div>
+    </header>
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <div id="toast" data-toast class="toast-container"></div>
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

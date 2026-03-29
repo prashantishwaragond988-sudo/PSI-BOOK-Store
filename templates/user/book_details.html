@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ book.title }}</title>
+  <style>
+    body{margin:0;font-family:Segoe UI,sans-serif;background:#f4f8ff;color:#123150}
+    .wrap{max-width:920px;margin:20px auto;padding:0 12px}
+    .card{background:#fff;border-radius:14px;box-shadow:0 10px 26px rgba(17,42,74,.12);padding:16px;display:grid;grid-template-columns:260px 1fr;gap:14px}
+    img{width:100%;height:320px;object-fit:cover;border-radius:12px;background:#edf3ff}
+    h1{margin:0 0 6px}
+    .muted{color:#5c7090}
+    @media (max-width:760px){.card{grid-template-columns:1fr}img{height:240px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <a href="/user/home">Back</a>
+    <article class="card">
+      <img src="{{ book.image_url or '/static/p1.jpg' }}" alt="{{ book.title }}" onerror="this.src='/static/p1.jpg'">
+      <div>
+        <h1>{{ book.title }}</h1>
+        <div class="muted">Author: {{ book.author or '-' }}</div>
+        <div class="muted">Store: {{ book.store_id or book.shop_id or '-' }}</div>
+        <h2>Rs {{ '%.2f'|format(book.price or 0) }}</h2>
+        <div class="muted">Stock: {{ book.stock }}</div>
+        <p>{{ book.description or 'No description available.' }}</p>
+      </div>
+    </article>
+  </main>
+</body>
+</html>

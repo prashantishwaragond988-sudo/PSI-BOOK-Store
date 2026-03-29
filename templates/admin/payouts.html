@@ -1,0 +1,73 @@
+{% extends "admin/base_admin.html" %}
+{% set page_title = "Payouts" %}
+{% block title %}Payouts | PSI Admin{% endblock %}
+
+{% block content %}
+<section class="card table-card">
+  <header class="section-title">
+      <h2>Weekly Payout Candidates</h2>
+      <span class="pill">{{ weekly_reports|length }} stores</span>
+  </header>
+  <table>
+    <thead>
+      <tr>
+        <th>Store</th>
+        <th>Owner</th>
+        <th>Orders</th>
+        <th>Sales</th>
+        <th>Commission</th>
+        <th>To Pay</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in weekly_reports %}
+      <tr>
+        <td>{{ row.store_name or row.shop_name or row.store_id or "-" }}</td>
+        <td class="mono">{{ row.shop_owner_id or "-" }}</td>
+        <td>{{ row.total_orders or 0 }}</td>
+        <td>Rs {{ "%.2f"|format(row.total_sales or 0) }}</td>
+        <td>Rs {{ "%.2f"|format(row.admin_commission_total or 0) }}</td>
+        <td>Rs {{ "%.2f"|format(row.amount_to_pay or 0) }}</td>
+        <td>
+          <button class="btn btn-primary" data-action="generate-payout" data-owner-id="{{ row.shop_owner_id }}">Generate</button>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7">No weekly report rows.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="card table-card" style="margin-top:16px;">
+  <header class="section-title">
+    <h2>Payout Queue</h2>
+    <span class="pill">{{ payouts|length }} records</span>
+  </header>
+  <table>
+    <thead>
+      <tr><th>Payout</th><th>Owner</th><th>Amount</th><th>Status</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      {% for payout in payouts %}
+      <tr>
+        <td class="mono">{{ payout.payout_id }}</td>
+        <td class="mono">{{ payout.shop_owner_id or "-" }}</td>
+        <td>Rs {{ "%.2f"|format(payout.amount_to_pay or 0) }}</td>
+        <td><span class="pill {{ 'ok' if payout.status=='PAID' else 'warn' }}">{{ payout.status or '-' }}</span></td>
+        <td>
+          {% if payout.status != "PAID" %}
+          <button class="btn btn-success" data-action="pay-payout" data-payout-id="{{ payout.payout_id }}">Mark Paid</button>
+          {% else %}
+          <span class="pill ok">Paid</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5">No payouts found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

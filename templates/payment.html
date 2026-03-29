@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{
+      margin:0;
+      font-family:'Poppins',sans-serif;
+      background:#eef3fb;
+      color:#1f2937;
+    }
+    :root{
+      --lift: 5px;
+      --lift-shadow: rgba(11,29,76,.28);
+    }
+    .menu-bar{
+      background:#0f4aa8;
+      color:white;
+      padding:12px 16px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .menu-title{
+      font-size:18px;
+      font-weight:700;
+    }
+    .menu-links{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .menu-links a{
+      color:white;
+      text-decoration:none;
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.24);
+      padding:8px 12px;
+      border-radius:8px;
+      font-size:13px;
+    }
+    .menu-links a,
+    .btn{
+      transform:translateY(0);
+      box-shadow:0 var(--lift) 0 var(--lift-shadow);
+      transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+    .menu-links a:hover,
+    .btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 calc(var(--lift) + 2px) 0 var(--lift-shadow);
+      filter:brightness(1.04);
+    }
+    .menu-links a:active,
+    .btn:active{
+      transform:translateY(2px);
+      box-shadow:0 2px 0 var(--lift-shadow);
+    }
+    .wrap{
+      max-width:920px;
+      margin:16px auto;
+      padding:0 12px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+    .card{
+      background:white;
+      border-radius:14px;
+      box-shadow:0 10px 24px rgba(0,0,0,.08);
+      padding:16px;
+    }
+    h2,h3{
+      margin:0 0 10px;
+    }
+    .muted{
+      font-size:13px;
+      color:#6b7280;
+      margin-bottom:8px;
+    }
+    .address-line{
+      margin:6px 0;
+      font-size:14px;
+    }
+    .pay-option{
+      border:1px solid #dbe4f2;
+      border-radius:10px;
+      padding:10px;
+      margin-bottom:8px;
+      background:#f8fbff;
+    }
+    label{
+      font-size:13px;
+      font-weight:600;
+      display:block;
+      margin-bottom:6px;
+    }
+    input{
+      width:100%;
+      box-sizing:border-box;
+      border:1px solid #cfd8e5;
+      border-radius:8px;
+      padding:10px;
+      font-family:inherit;
+      font-size:14px;
+      margin-bottom:10px;
+      background:white;
+    }
+    .btn{
+      border:none;
+      border-radius:8px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-weight:600;
+      font-family:inherit;
+      font-size:14px;
+    }
+    .btn-blue{background:#1d4ed8;color:white}
+    .btn-green{background:#16a34a;color:white}
+    .status{
+      min-height:20px;
+      margin-top:8px;
+      font-size:13px;
+    }
+    .ok{color:#15803d}
+    .err{color:#b91c1c}
+    .hide{display:none}
+    @media (max-width:900px){
+      .wrap{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+  <div class="menu-bar">
+    <div class="menu-title">Payment</div>
+    <div class="menu-links">
+      <a href="/checkout">Change Address</a>
+      <a href="/store">Store Home</a>
+      <a href="/orders">My Orders</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <h2>Deliver To</h2>
+      <div class="muted">Selected delivery address</div>
+      <div class="address-line"><b>{{ selected_address.fullname }}</b> ({{ selected_address.mobile }})</div>
+      <div class="address-line">{{ selected_address.street }}</div>
+      {% if selected_address.landmark %}
+      <div class="address-line">{{ selected_address.landmark }}</div>
+      {% endif %}
+      <div class="address-line">{{ selected_address.city }} - {{ selected_address.pincode }}</div>
+      <div class="address-line"><span style="background:#1d4ed8;color:white;padding:3px 8px;border-radius:999px;font-size:11px;">{{ selected_address.address_type or 'Home' }}</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Secure Payment</h3>
+      <div class="muted">Payment receiver: <b>Admin</b>.</div>
+
+      <div class="pay-option">
+        <label><input type="radio" name="pm" value="COD" checked> Cash On Delivery</label>
+      </div>
+      <div class="pay-option">
+        <label><input type="radio" name="pm" value="UPI"> UPI</label>
+        <div id="upiBox" class="hide">
+          <label for="upiId">UPI ID</label>
+          <input id="upiId" placeholder="name@upi">
+        </div>
+      </div>
+      <div class="pay-option">
+        <label><input type="radio" name="pm" value="CARD"> Card</label>
+        <div id="cardBox" class="hide">
+          <label for="cardNo">Card Number</label>
+          <input id="cardNo" maxlength="19" placeholder="1234 5678 9012 3456">
+        </div>
+      </div>
+
+      <button id="payBtn" class="btn btn-green" type="button">Pay & Place Order</button>
+      <div id="payStatus" class="status"></div>
+    </div>
+  </div>
+
+  <script>
+    const payBtn = document.getElementById("payBtn");
+    const payStatus = document.getElementById("payStatus");
+    const upiBox = document.getElementById("upiBox");
+    const cardBox = document.getElementById("cardBox");
+    const upiId = document.getElementById("upiId");
+    const cardNo = document.getElementById("cardNo");
+    const addressId = "{{ selected_address.id }}";
+
+    function selectedMethod(){
+      const el = document.querySelector("input[name='pm']:checked");
+      return (el && el.value) || "COD";
+    }
+
+    function setStatus(message, ok){
+      payStatus.textContent = message || "";
+      payStatus.className = "status " + (ok ? "ok" : "err");
+    }
+
+    function refreshMethodUI(){
+      const method = selectedMethod();
+      upiBox.classList.toggle("hide", method !== "UPI");
+      cardBox.classList.toggle("hide", method !== "CARD");
+    }
+
+    function generateTransactionId(method){
+      const now = Date.now();
+      if(method === "UPI"){ return "UPI-" + now; }
+      if(method === "CARD"){ return "CARD-" + now; }
+      return "";
+    }
+
+    async function payAndPlace(){
+      const method = selectedMethod();
+      if(method === "UPI" && !upiId.value.trim()){
+        setStatus("Enter UPI ID", false);
+        return;
+      }
+      if(method === "CARD" && !cardNo.value.trim()){
+        setStatus("Enter card number", false);
+        return;
+      }
+
+      payBtn.disabled = true;
+      setStatus("Processing payment...", true);
+
+      const txn = generateTransactionId(method);
+      setTimeout(async () => {
+        try{
+          const r = await fetch("/api/order",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({
+              payment_method: method,
+              transaction_id: txn,
+              address_id: addressId
+            })
+          });
+          const data = await r.json();
+          if(data.redirect){
+            window.location = data.redirect;
+            return;
+          }
+          setStatus(data.error || "Unable to place order.", false);
+        }catch(e){
+          setStatus("Unable to place order.", false);
+        }finally{
+          payBtn.disabled = false;
+        }
+      }, 900);
+    }
+
+    document.querySelectorAll("input[name='pm']").forEach((el) => {
+      el.addEventListener("change", refreshMethodUI);
+    });
+    payBtn.addEventListener("click", payAndPlace);
+    refreshMethodUI();
+  </script>
+</body>
+</html>

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BookKart · Online Bookstore</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --brand:#0f6fff;
+      --brand-2:#0ed3a3;
+    }
+    body { background: #f4f7fb; }
+    .glass { background: rgba(255,255,255,0.76); backdrop-filter: blur(16px); box-shadow: 0 20px 60px rgba(15,47,104,.16); }
+    .card-hover { transition: transform .18s ease, box-shadow .18s ease; }
+    .card-hover:hover { transform: translateY(-6px); box-shadow: 0 18px 40px rgba(18,52,102,.14); }
+    .scroll-row::-webkit-scrollbar{height:10px;}
+    .scroll-row::-webkit-scrollbar-thumb{background:#d5deef;border-radius:999px;}
+    @keyframes pulse-soft { 0%{transform:translateY(0);}50%{transform:translateY(-4px);}100%{transform:translateY(0);} }
+    .animate-soft { animation:pulse-soft 4s ease-in-out infinite; }
+    .banner-slide { transition: opacity .6s ease, transform .6s ease; }
+    .modal-bg { background: rgba(10, 17, 35, 0.66); }
+    .chip { transition: all .15s ease; }
+    .chip:hover { transform: translateY(-2px); }
+  </style>
+</head>
+<body class="text-slate-900">
+  <!-- Navbar -->
+  <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center gap-4 py-3">
+      <div class="flex items-center gap-2 font-extrabold text-xl text-slate-800">
+        <div class="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-400 grid place-items-center text-white shadow-lg">BK</div>
+        <div>BookKart</div>
+      </div>
+      <div class="flex-1 relative">
+        <input id="searchInput" type="text" placeholder="Search for books, authors, categories" class="w-full rounded-full border border-slate-200 px-4 py-2.5 pl-4 pr-12 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <button id="searchBtn" class="absolute right-1 top-1 bottom-1 px-4 rounded-full bg-gradient-to-r from-blue-600 to-emerald-400 text-white font-semibold shadow-md">Search</button>
+        <div id="searchSuggestions" class="absolute mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-xl hidden"></div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="relative">
+          <button id="loginMenu" class="relative px-3 py-2 rounded-full bg-slate-100 hover:bg-slate-200 font-semibold">Account</button>
+          <div id="accountMenu" class="hidden absolute right-0 mt-2 w-48 bg-white shadow-xl rounded-xl border border-slate-200 z-50">
+            <a class="block px-4 py-2 hover:bg-slate-50" href="/user/profile">Profile</a>
+            <a class="block px-4 py-2 hover:bg-slate-50" href="/user/orders-page">My Orders</a>
+            <a class="block px-4 py-2 hover:bg-slate-50" href="/user/wishlist-page">Wishlist</a>
+            <a class="block px-4 py-2 hover:bg-slate-50" href="/user/checkout">Checkout</a>
+            <a class="block px-4 py-2 hover:bg-slate-50" href="/user/payment">Payment</a>
+            <a class="block px-4 py-2 hover:bg-slate-50" href="/user/help">Help</a>
+            <a class="block px-4 py-2 hover:bg-slate-50" href="/user/about">About Us</a>
+          </div>
+        </div>
+        <div id="cartBtn" class="relative px-3 py-2 rounded-full bg-slate-100 hover:bg-slate-200 font-semibold">
+          Cart
+          <span id="cartCount" class="ml-2 inline-flex h-6 min-w-[24px] items-center justify-center rounded-full bg-blue-600 text-white text-xs font-bold px-2">0</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Category icons -->
+  <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-4">
+    <div class="grid grid-flow-col auto-cols-max gap-3 overflow-x-auto pb-3 scroll-row">
+      <button class="chip inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-sm border border-slate-200" data-cat="All"><span>📚</span>All</button>
+      <button class="chip inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-sm border border-slate-200" data-cat="Fiction"><span>📖</span>Fiction</button>
+      <button class="chip inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-sm border border-slate-200" data-cat="Education"><span>🎓</span>Education</button>
+      <button class="chip inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-sm border border-slate-200" data-cat="Self Help"><span>💡</span>Self Help</button>
+      <button class="chip inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-sm border border-slate-200" data-cat="Business"><span>💼</span>Business</button>
+      <button class="chip inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-sm border border-slate-200" data-cat="Technology"><span>🖥️</span>Technology</button>
+      <button class="chip inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-sm border border-slate-200" data-cat="History"><span>🏺</span>History</button>
+      <button class="chip inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-sm border border-slate-200" data-cat="Kids"><span>🧒</span>Kids Books</button>
+      <button class="chip inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-sm border border-slate-200" data-cat="Comics"><span>🦸</span>Comics</button>
+      <button class="chip inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-sm border border-slate-200" data-cat="Exam Prep"><span>📝</span>Exam Prep</button>
+    </div>
+  </section>
+
+  <!-- Banner slider -->
+  <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-4">
+    <div class="relative rounded-2xl overflow-hidden glass">
+      <div id="bannerTrack" class="relative h-52 sm:h-64">
+        <!-- slides injected -->
+      </div>
+      <div class="absolute inset-x-0 bottom-3 flex justify-center gap-2" id="bannerDots"></div>
+    </div>
+  </section>
+
+  <!-- Main content -->
+  <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-3 grid grid-cols-1 gap-4 pb-16">
+    <section class="glass rounded-2xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">Quick Actions</h2>
+          <p class="text-sm text-slate-500">Jump to profile, orders, payments, help, and more.</p>
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+        <a href="/user/profile" class="card-hover block rounded-xl bg-white border border-slate-200 p-3 text-sm font-semibold text-slate-800">
+          👤 Profile
+          <div class="text-xs text-slate-500">View & edit details</div>
+        </a>
+        <a href="/user/orders-page" class="card-hover block rounded-xl bg-white border border-slate-200 p-3 text-sm font-semibold text-slate-800">
+          🧾 My Orders
+          <div class="text-xs text-slate-500">Track & receipts</div>
+        </a>
+        <a href="/user/checkout" class="card-hover block rounded-xl bg-white border border-slate-200 p-3 text-sm font-semibold text-slate-800">
+          💳 Checkout
+          <div class="text-xs text-slate-500">Cart summary</div>
+        </a>
+        <a href="/user/payment" class="card-hover block rounded-xl bg-white border border-slate-200 p-3 text-sm font-semibold text-slate-800">
+          💰 Payment
+          <div class="text-xs text-slate-500">Payment options</div>
+        </a>
+        <a href="/user/wishlist-page" class="card-hover block rounded-xl bg-white border border-slate-200 p-3 text-sm font-semibold text-slate-800">
+          ❤️ Wishlist
+          <div class="text-xs text-slate-500">Saved books</div>
+        </a>
+        <a href="/user/help" class="card-hover block rounded-xl bg-white border border-slate-200 p-3 text-sm font-semibold text-slate-800">
+          ❓ Help / About
+          <div class="text-xs text-slate-500">Support & info</div>
+        </a>
+      </div>
+    </section>
+
+    <section class="space-y-6">
+      <!-- Rows -->
+      <div id="topSellers" class="glass rounded-2xl p-4"></div>
+      <div id="mostOrdered" class="glass rounded-2xl p-4"></div>
+      <div id="recent" class="glass rounded-2xl p-4"></div>
+      <div id="recommended" class="glass rounded-2xl p-4"></div>
+      <!-- Grid -->
+      <div class="glass rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">All Books</h2>
+            <p class="text-sm text-slate-500" id="resultCount">Loading...</p>
+          </div>
+          <div class="flex gap-2">
+            <select id="sortSelect" class="rounded-lg border border-slate-200 px-3 py-2 text-sm">
+              <option value="relevance">Sort: Relevance</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="rating">Rating</option>
+              <option value="new">Newest</option>
+              <option value="orders">Most Ordered</option>
+            </select>
+          </div>
+        </div>
+        <div id="grid" class="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Book modal -->
+  <div id="bookModal" class="fixed inset-0 hidden items-center justify-center modal-bg z-40">
+    <div class="bg-white max-w-3xl w-[94vw] rounded-2xl shadow-2xl overflow-hidden relative">
+      <button id="closeModal" class="absolute top-3 right-3 bg-slate-100 rounded-full px-3 py-1 text-sm">✕</button>
+      <div class="grid md:grid-cols-2 gap-0">
+        <div class="bg-slate-50 p-4 flex items-center justify-center">
+          <img id="modalImage" src="" alt="" class="max-h-96 rounded-xl shadow-md">
+        </div>
+        <div class="p-5 space-y-3">
+          <div class="text-xs font-semibold text-blue-600">Book Details</div>
+          <h3 id="modalTitle" class="text-2xl font-bold"></h3>
+          <div id="modalAuthor" class="text-sm text-slate-500"></div>
+          <div class="flex items-center gap-3">
+            <div id="modalPrice" class="text-xl font-extrabold text-slate-800"></div>
+            <div id="modalDiscount" class="text-sm text-emerald-600 font-semibold"></div>
+          </div>
+          <div id="modalRating" class="text-sm text-amber-600 font-semibold"></div>
+          <p id="modalDesc" class="text-sm text-slate-600"></p>
+          <div class="flex gap-2">
+            <button id="modalAddCart" class="flex-1 rounded-lg bg-blue-600 text-white py-2 font-semibold">Add to Cart</button>
+            <button id="modalBuyNow" class="flex-1 rounded-lg bg-emerald-500 text-white py-2 font-semibold">Buy Now</button>
+          </div>
+          <div>
+            <div class="font-semibold mb-1">Reviews</div>
+            <div id="modalReviews" class="space-y-2 max-h-40 overflow-y-auto text-sm"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart drawer -->
+  <div id="cartDrawer" class="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-50">
+    <div class="flex items-center justify-between px-4 py-3 border-b">
+      <h3 class="text-lg font-bold">Your Cart</h3>
+      <button id="closeCart" class="text-slate-600">✕</button>
+    </div>
+    <div id="cartItems" class="p-4 space-y-3 overflow-y-auto h-[65vh]"></div>
+    <div class="p-4 border-t space-y-2">
+      <div class="flex justify-between text-sm"><span>Subtotal</span><span id="cartSubtotal" class="font-semibold"></span></div>
+      <button id="checkoutBtn" class="w-full rounded-lg bg-emerald-500 text-white py-2 font-semibold">Place Order</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-3 rounded-full bg-slate-900 text-white shadow-2xl hidden z-50"></div>
+
+  <script>
+    const state = {
+      books: [],
+      filtered: [],
+      cart: new Map(),
+      wishlist: new Set(),
+      banners: [
+        {title:"Top selling books", sub:"Handpicked bestsellers at unbeatable prices", cta:"Shop now", color:"from-blue-600 to-indigo-500", image:"/static/p1.jpg"},
+        {title:"50% discount books", sub:"Limited time offers on editor's picks", cta:"Grab deals", color:"from-emerald-500 to-teal-400", image:"/static/p1.jpg"},
+        {title:"New arrivals", sub:"Fresh releases hot off the press", cta:"Explore", color:"from-purple-500 to-fuchsia-500", image:"/static/p1.jpg"},
+      ],
+      currentBanner:0,
+      activeCategory:"All",
+    };
+
+    const fmt = (n)=>"₹ " + Number(n||0).toFixed(2);
+    const fallbackCovers = [
+      "https://upload.wikimedia.org/wikipedia/en/6/6f/One_Piece_Volume_61_Cover.png",
+      "https://upload.wikimedia.org/wikipedia/commons/2/2e/Kurukshetra.jpg",
+      "https://upload.wikimedia.org/wikipedia/en/6/6c/Mechanism_of_the_Heavens_cover.jpg",
+      "https://m.media-amazon.com/images/I/81sXJ3AdxML.jpg",
+      "https://m.media-amazon.com/images/I/81wL7sRKqzL._AC_UF1000,1000_QL80_.jpg",
+      "https://m.media-amazon.com/images/I/81OZYk7dHoL.jpg",
+      "https://m.media-amazon.com/images/I/71tW0fEyL4L.jpg",
+      "https://m.media-amazon.com/images/I/81Y8NDP9uBL.jpg"
+    ];
+    const coverFor = (b)=>{
+      const url = b.image_url || b.image || "";
+      if(url && url.trim()) return url;
+      const idx = Math.abs((b.title || b.book_id || "0").split("").reduce((a,c)=>a+c.charCodeAt(0),0)) % fallbackCovers.length;
+      return fallbackCovers[idx];
+    };
+    const stars = (r)=>'★'.repeat(Math.round(r||0)) + '☆'.repeat(5-Math.round(r||0));
+
+    const chips = document.querySelectorAll(".chip");
+    chips.forEach(ch=>ch.addEventListener("click", ()=>{
+      chips.forEach(c=>c.classList.remove("bg-blue-50","border-blue-200","text-blue-700"));
+      ch.classList.add("bg-blue-50","border-blue-200","text-blue-700");
+      state.activeCategory = ch.dataset.cat || "All";
+      applyFilters();
+    }));
+
+    // Banner slider
+    function renderBanners(){
+      const track = document.getElementById("bannerTrack");
+      const dots = document.getElementById("bannerDots");
+      track.innerHTML = state.banners.map((b,i)=>`
+        <div class="absolute inset-0 banner-slide ${i===state.currentBanner?'opacity-100':'opacity-0'}" style="background: linear-gradient(120deg, rgba(15,111,255,0.08), rgba(14,211,163,0.08));">
+          <div class="grid grid-cols-1 md:grid-cols-2 h-full">
+            <div class="p-6 flex flex-col justify-center gap-3">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 text-blue-700 w-max text-xs font-bold">Books only</div>
+              <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800">${b.title}</h2>
+              <p class="text-slate-600">${b.sub}</p>
+              <button class="w-max px-5 py-2 rounded-full bg-gradient-to-r ${b.color} text-white font-semibold shadow-lg">${b.cta}</button>
+            </div>
+            <div class="relative hidden md:flex items-center justify-center">
+              <div class="absolute inset-8 rounded-3xl bg-gradient-to-br ${b.color} opacity-20 blur-3xl"></div>
+              <img src="${b.image}" class="relative h-40 sm:h-52 rounded-2xl shadow-2xl object-cover animate-soft" onerror="this.src='/static/p1.jpg'">
+            </div>
+          </div>
+        </div>
+      `).join("");
+      dots.innerHTML = state.banners.map((_,i)=>`<button class="h-2.5 w-2.5 rounded-full ${i===state.currentBanner?'bg-blue-600':'bg-slate-300'}" data-i="${i}"></button>`).join("");
+      dots.querySelectorAll("button").forEach(btn=>btn.onclick=()=>{state.currentBanner=Number(btn.dataset.i);renderBanners();});
+    }
+    setInterval(()=>{state.currentBanner=(state.currentBanner+1)%state.banners.length;renderBanners();}, 4200);
+
+    // Fetch books
+    async function loadBooks(){
+      const res = await fetch('/books');
+      const data = await res.json();
+      state.books = (Array.isArray(data)?data:[]).map(b=>({
+        ...b,
+        book_id: b.book_id || b.id,
+        category: b.category || "General",
+        rating: Number(b.rating || b.avg_rating || Math.min(5, Math.max(3, (b.order_count||0)%5 + 3))).toFixed(1),
+        discount: Number(b.discount || 0),
+        order_count: Number(b.order_count || b.orders || 0),
+        language: b.language || "English",
+        publication_year: b.publication_year || "",
+      }));
+      applyFilters();
+    }
+
+    function applyFilters(){
+      const q = document.getElementById("searchInput").value.trim().toLowerCase();
+      const cat = state.activeCategory;
+      state.filtered = state.books.filter(b=>{
+        const matchesSearch = !q || [b.title, b.author, b.category].some(v=>String(v||'').toLowerCase().includes(q));
+        const matchesChip = cat==="All" || b.category===cat;
+        return matchesSearch && matchesChip;
+      });
+      sortBooks();
+      renderSections();
+      renderGrid();
+      document.getElementById("resultCount").textContent = `${state.filtered.length} books`;
+    }
+
+    function sortBooks(){
+      const val = document.getElementById("sortSelect").value;
+      const keyFns = {
+        price_asc:(a,b)=>a.price-b.price,
+        price_desc:(a,b)=>b.price-a.price,
+        rating:(a,b)=>Number(b.rating)-Number(a.rating),
+        new:(a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0),
+        orders:(a,b)=>Number(b.order_count)-Number(a.order_count),
+      };
+      if(keyFns[val]) state.filtered.sort(keyFns[val]);
+    }
+
+    function renderRow(title, items, target){
+      const box = document.getElementById(target);
+      if(!items.length){ box.innerHTML = ""; return; }
+      box.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="text-lg font-bold text-slate-800">${title}</h2>
+            <p class="text-sm text-slate-500">Inspired by Flipkart rows</p>
+          </div>
+          <div class="flex gap-2 text-sm">
+            <button class="px-3 py-1 rounded-lg bg-slate-100" onclick="scrollRow('${target}-row', -320)">‹</button>
+            <button class="px-3 py-1 rounded-lg bg-slate-100" onclick="scrollRow('${target}-row', 320)">›</button>
+          </div>
+        </div>
+        <div id="${target}-row" class="scroll-row overflow-x-auto flex gap-3 pb-2">
+          ${items.map(renderCard).join("")}
+        </div>
+      `;
+    }
+
+    function renderCard(b){
+      const wish = state.wishlist.has(b.book_id);
+      return `
+        <div class="min-w-[220px] max-w-[240px] bg-white border border-slate-200 rounded-xl p-3 card-hover">
+          <div class="relative">
+            <img src="${coverFor(b)}" onerror="this.src='/static/p1.jpg'" class="h-40 w-full object-cover rounded-lg">
+            <button onclick="toggleWishlist('${b.book_id}','${b.store_id||b.shop_id||''}')" class="absolute top-2 right-2 h-9 w-9 grid place-items-center rounded-full bg-white shadow ${wish?'text-red-500':'text-slate-500'}">❤</button>
+          </div>
+          <div class="mt-2 font-semibold line-clamp-2">${b.title}</div>
+          <div class="text-xs text-slate-500">${b.author||'Unknown'}</div>
+          <div class="flex items-center gap-2 text-sm mt-1">
+            <span class="font-bold text-slate-800">${fmt(b.price)}</span>
+            ${b.discount?`<span class="text-emerald-600 font-semibold">${b.discount}% off</span>`:''}
+          </div>
+          <div class="text-xs text-amber-600 font-semibold">${stars(b.rating)} (${Number(b.rating).toFixed(1)})</div>
+          <div class="flex gap-2 mt-2">
+            <button onclick="addToCart('${b.book_id}')" class="flex-1 rounded-lg bg-blue-600 text-white py-2 text-sm font-semibold">Add to Cart</button>
+            <button onclick="openModal('${b.book_id}')" class="w-10 rounded-lg border border-slate-200 text-slate-700">↗</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSections(){
+      const top = [...state.filtered].sort((a,b)=>b.rating - a.rating).slice(0,10);
+      const most = [...state.filtered].sort((a,b)=>b.order_count - a.order_count).slice(0,10);
+      const recent = [...state.filtered].sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0)).slice(0,10);
+      const recommended = [...state.filtered].sort((a,b)=>b.discount - a.discount).slice(0,10);
+      renderRow("Top Sellers", top, "topSellers");
+      renderRow("Most Ordered", most, "mostOrdered");
+      renderRow("Recently Added", recent, "recent");
+      renderRow("Recommended Books", recommended, "recommended");
+    }
+
+    function renderGrid(){
+      const grid = document.getElementById("grid");
+      if(!state.filtered.length){ grid.innerHTML = `<div class="col-span-full text-center text-slate-500 py-8">No books match your filters.</div>`; return; }
+      grid.innerHTML = state.filtered.slice(0,60).map(renderCard).join("");
+    }
+
+    function scrollRow(id, delta){
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.scrollBy({left:delta, behavior:"smooth"});
+    }
+
+    async function openModal(id){
+      const b = state.books.find(x=>x.book_id===id);
+      if(!b) return;
+      document.getElementById("modalImage").src = coverFor(b);
+      document.getElementById("modalTitle").textContent = b.title;
+      document.getElementById("modalAuthor").textContent = b.author;
+      document.getElementById("modalPrice").textContent = fmt(b.price);
+      document.getElementById("modalDiscount").textContent = b.discount ? `${b.discount}% off` : "";
+      document.getElementById("modalRating").textContent = `${stars(b.rating)} · ${b.rating}`;
+      document.getElementById("modalDesc").textContent = b.description || "No description available.";
+      document.getElementById("modalAddCart").onclick = ()=>addToCart(id);
+      document.getElementById("modalBuyNow").onclick = ()=>{addToCart(id); openCart();};
+
+      // Reviews placeholder
+      const revBox = document.getElementById("modalReviews");
+      const reviews = b.reviews || [];
+      if(reviews.length){
+        revBox.innerHTML = reviews.map(r=>`
+          <div class="border border-slate-200 rounded-lg p-2">
+            <div class="flex items-center justify-between text-xs text-slate-500"><span>${r.user||'User'}</span><span>${r.date||''}</span></div>
+            <div class="text-amber-600 text-sm font-semibold">${stars(r.rating||0)}</div>
+            <div>${r.comment||''}</div>
+          </div>`).join("");
+      }else{
+        revBox.innerHTML = `<div class="text-slate-500 text-sm">No reviews yet.</div>`;
+      }
+
+      document.getElementById("bookModal").classList.remove("hidden");
+      document.getElementById("bookModal").classList.add("flex");
+    }
+
+    document.getElementById("closeModal").onclick = ()=>{
+      document.getElementById("bookModal").classList.add("hidden");
+      document.getElementById("bookModal").classList.remove("flex");
+    };
+
+    // Cart
+    function addToCart(id){
+      const b = state.books.find(x=>x.book_id===id);
+      if(!b) return;
+      const existing = state.cart.get(id) || {...b, qty:0};
+      existing.qty += 1;
+      state.cart.set(id, existing);
+      renderCart();
+      toast(`${b.title} added to cart`);
+      persistCart();
+    }
+
+    function renderCart(){
+      const box = document.getElementById("cartItems");
+      if(!state.cart.size){ box.innerHTML = `<div class="text-slate-500 text-sm">Your cart is empty.</div>`; }
+      let total = 0;
+      box.innerHTML = [...state.cart.values()].map(item=>{
+        const line = item.qty * item.price;
+        total += line;
+        return `
+          <div class="border border-slate-200 rounded-xl p-3 flex gap-3">
+            <img src="${coverFor(item)}" class="h-16 w-16 object-cover rounded-lg">
+            <div class="flex-1">
+              <div class="font-semibold">${item.title}</div>
+              <div class="text-xs text-slate-500">${item.author||''}</div>
+              <div class="flex items-center gap-2 mt-1 text-sm">
+                <button class="px-2 bg-slate-100 rounded" onclick="changeQty('${item.book_id}',-1)">-</button>
+                <span>${item.qty}</span>
+                <button class="px-2 bg-slate-100 rounded" onclick="changeQty('${item.book_id}',1)">+</button>
+                <span class="ml-auto font-semibold">${fmt(line)}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+      document.getElementById("cartCount").textContent = state.cart.size;
+      document.getElementById("cartSubtotal").textContent = fmt(total);
+      persistCart();
+    }
+    function changeQty(id, delta){
+      const item = state.cart.get(id);
+      if(!item) return;
+      item.qty += delta;
+      if(item.qty <=0) state.cart.delete(id); else state.cart.set(id,item);
+      renderCart();
+      persistCart();
+    }
+    function openCart(){
+      document.getElementById("cartDrawer").classList.remove("translate-x-full");
+      renderCart();
+    }
+    function closeCart(){
+      document.getElementById("cartDrawer").classList.add("translate-x-full");
+    }
+    document.getElementById("cartBtn").onclick = openCart;
+    document.getElementById("closeCart").onclick = closeCart;
+
+    async function placeOrder(){
+      if(!state.cart.size){ toast("Cart is empty"); return; }
+      const items = [...state.cart.values()].map(it=>({book_id:it.book_id, title:it.title, qty:it.qty, price:it.price, image:coverFor(it), store_id:it.store_id||it.shop_id}));
+      const storeIds = [...new Set(items.map(it=>it.store_id).filter(Boolean))];
+      if(storeIds.length!==1){ toast("Order from one store at a time"); return; }
+      const subtotal = items.reduce((s,i)=>s + i.qty * i.price, 0);
+      const draft = { store_id: storeIds[0], items, subtotal };
+      localStorage.setItem("checkout_draft", JSON.stringify(draft));
+      window.location.href = "/user/checkout";
+    }
+    document.getElementById("checkoutBtn").onclick = placeOrder;
+
+    // Wishlist
+    async function loadWishlist(){
+      try{
+        const res = await fetch('/api/wishlist');
+        const data = await res.json();
+        if(Array.isArray(data)) data.forEach(it=>state.wishlist.add(it.id || it.book_id));
+      }catch(err){ console.warn("wishlist fetch skipped", err); }
+    }
+
+    async function loadCart(){
+      try{
+        const res = await fetch('/api/cart');
+        const data = await res.json();
+        if(Array.isArray(data.items)){
+          data.items.forEach(it=>{
+            state.cart.set(it.book_id, {...it});
+          });
+          renderCart();
+        }
+      }catch(err){ console.warn("cart load skipped", err); }
+    }
+
+    async function persistCart(){
+      try{
+        const items = [...state.cart.values()].map(it=>({
+          book_id: it.book_id,
+         title: it.title,
+         qty: it.qty,
+         price: it.price,
+         image: it.image_url || it.image,
+          store_id: it.store_id || it.shop_id
+        }));
+        await fetch('/api/cart', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({items})
+        });
+      }catch(err){
+        console.warn("cart persist skipped", err);
+      }
+    }
+    async function toggleWishlist(bookId, storeId){
+      const inList = state.wishlist.has(bookId);
+      if(inList){
+        state.wishlist.delete(bookId);
+        await fetch('/api/wishlist/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({book_id:bookId})});
+        toast("Removed from wishlist");
+      }else{
+        state.wishlist.add(bookId);
+        await fetch('/api/wishlist/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({book_id:bookId, store_id:storeId||""})});
+        toast("Saved to wishlist");
+      }
+      renderGrid(); renderSections();
+    }
+
+    // Search suggestions
+    const searchBox = document.getElementById("searchInput");
+    searchBox.addEventListener("input", ()=>{
+      const q = searchBox.value.trim().toLowerCase();
+      const sug = document.getElementById("searchSuggestions");
+      if(!q){ sug.classList.add("hidden"); return; }
+      const matches = state.books.filter(b=>[b.title,b.author,b.category].some(v=>String(v||'').toLowerCase().includes(q))).slice(0,6);
+      sug.innerHTML = matches.map(m=>`<div class="px-3 py-2 hover:bg-slate-100 cursor-pointer">${m.title} · <span class="text-slate-500 text-xs">${m.author}</span></div>`).join("");
+      sug.querySelectorAll("div").forEach((d,i)=>{
+        d.onclick = ()=>{ searchBox.value = matches[i].title; applyFilters(); sug.classList.add("hidden"); };
+      });
+      sug.classList.remove("hidden");
+    });
+    document.getElementById("searchBtn").onclick = applyFilters;
+
+    document.getElementById("sortSelect").addEventListener("change", ()=>{sortBooks();renderSections();renderGrid();});
+
+    function toast(msg){
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.remove("hidden");
+      setTimeout(()=>t.classList.add("hidden"), 1800);
+    }
+
+    const accountMenu = document.getElementById("accountMenu");
+    document.getElementById("loginMenu").onclick = (e)=>{
+      e.stopPropagation();
+      accountMenu.classList.toggle("hidden");
+    };
+    document.addEventListener("click",(e)=>{
+      if(!accountMenu.contains(e.target)){
+        accountMenu.classList.add("hidden");
+      }
+    });
+
+    // Init
+    renderBanners();
+    loadWishlist();
+    loadCart();
+    loadBooks();
+  </script>
+</body>
+</html>

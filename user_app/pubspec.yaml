@@ -1,0 +1,57 @@
+name: our_store
+description: A modern eCommerce Flutter app for OurStore.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.11.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  firebase_core: ^3.15.2
+  firebase_auth: ^5.7.0
+  cloud_firestore: ^5.4.4
+  firebase_storage: ^12.3.1
+  firebase_messaging: ^15.2.2
+  lottie: ^3.3.2
+  google_fonts: ^8.0.2
+  provider: ^6.1.5+1
+  shared_preferences: ^2.5.3
+  intl: ^0.20.2
+  http: ^1.2.2
+  connectivity_plus: ^6.0.5
+  cached_network_image: ^3.4.1
+  qr_code_scanner: ^1.0.1
+  fluttertoast: ^8.2.4
+  animations: ^2.0.11
+  google_maps_flutter: ^2.6.1
+  flutter_staggered_grid_view: ^0.7.0
+  glassmorphism: any
+  shimmer: ^3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/animation/login.json
+    - assets/icon/logo.png
+    - assets/lottie/
+    - assets/images/
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/logo.png"
+
+dependency_overrides:
+  qr_code_scanner:
+    path: plugins/qr_code_scanner

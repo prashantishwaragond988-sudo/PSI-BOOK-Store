@@ -1,0 +1,49 @@
+{% extends "admin/base_admin.html" %}
+{% set page_title = "Users" %}
+{% block title %}Users | PSI Admin{% endblock %}
+
+{% block content %}
+<section class="card">
+  <div class="section-title">
+    <h2>Users Directory</h2>
+    <div class="pill">{{ users|length }} users</div>
+  </div>
+  <p class="card__subtitle">Block or activate users to control access.</p>
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td class="mono">{{ user.user_id }}</td>
+          <td>{{ user.name or "-" }}</td>
+          <td>{{ user.email or "-" }}</td>
+          <td><span class="pill">{{ user.role or "-" }}</span></td>
+          <td>
+            <span class="pill {{ 'ok' if user.status=='ACTIVE' else 'warn' }}">{{ user.status or "-" }}</span>
+          </td>
+          <td class="actions">
+            {% if user.status == "ACTIVE" %}
+            <button class="btn btn-danger" data-action="set-status" data-id="{{ user.user_id }}" data-status="BLOCKED">Block</button>
+            {% else %}
+            <button class="btn btn-success" data-action="set-status" data-id="{{ user.user_id }}" data-status="ACTIVE">Activate</button>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">No users found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

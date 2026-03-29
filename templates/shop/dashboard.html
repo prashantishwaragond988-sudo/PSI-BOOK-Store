@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Console – Books Only</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --blue:#1d4ed8;
+      --green:#16a34a;
+      --red:#dc2626;
+      --bg:#f3f6fc;
+    }
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:"Poppins",sans-serif;background:var(--bg);color:#1f2937;}
+    header{background:var(--blue);color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:10;}
+    header h1{margin:0;font-size:18px;}
+    header a{color:#fff;text-decoration:none;background:rgba(255,255,255,0.12);padding:8px 12px;border-radius:8px;font-size:13px;}
+    .subbar{background:#ffffff;box-shadow:0 8px 20px rgba(0,0,0,.06);padding:10px 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;position:sticky;top:62px;z-index:9;}
+    .chip{padding:8px 12px;border-radius:12px;background:#eef2ff;color:#1d4ed8;font-weight:600;font-size:13px;cursor:pointer;transition:transform .16s ease;}
+    .chip:hover{transform:translateY(-2px);}
+    main{max-width:1200px;margin:16px auto;padding:0 14px;display:grid;gap:12px;animation:fadeIn .35s ease;}
+    .card{background:#fff;border-radius:14px;box-shadow:0 12px 24px rgba(15,35,74,.08);padding:14px;animation:rise .35s ease;}
+    h2{margin:0 0 10px;font-size:18px;}
+    form{display:grid;gap:10px;}
+    input,textarea{border:1px solid #d5def1;border-radius:10px;padding:10px;font:inherit;width:100%;}
+    input[type=file]{padding:6px;}
+    button{border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;}
+    .btn-blue{background:var(--blue);color:white;}
+    .btn-green{background:var(--green);color:white;}
+    .btn-red{background:var(--red);color:white;}
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    th,td{padding:9px;border-bottom:1px solid #e7edf7;text-align:left;vertical-align:top;}
+    th{background:#eef2ff;}
+    .grid-2{display:grid;grid-template-columns:2fr 1fr;gap:12px;}
+    @media(max-width:900px){.grid-2{grid-template-columns:1fr;}}
+    .muted{color:#6b7280;font-size:12px;}
+    .img-thumb{height:48px;width:48px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;}
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+    @keyframes rise{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Seller Console – Bookstore</h1>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a href="/shop/dashboard">Refresh</a>
+      <a href="/role/logout">Logout</a>
+    </div>
+  </header>
+  <div class="subbar">
+    <div class="chip" onclick="document.getElementById('profileCard')?.scrollIntoView({behavior:'smooth'});">👤 Profile</div>
+    <div class="chip" onclick="document.getElementById('catCard')?.scrollIntoView({behavior:'smooth'});">🏷️ Categories</div>
+    <div class="chip" onclick="document.getElementById('addBookCard')?.scrollIntoView({behavior:'smooth'});">➕ Add Book</div>
+    <div class="chip" onclick="document.getElementById('booksCard')?.scrollIntoView({behavior:'smooth'});">📚 My Books</div>
+    <div class="chip" onclick="document.getElementById('ordersCard')?.scrollIntoView({behavior:'smooth'});">🧾 Orders</div>
+    <div class="chip" onclick="alert('Need help? Email support@bookkart.local');">❓ Help</div>
+    <div class="chip" onclick="alert('About: This seller console lets you manage books, categories, and orders for the bookstore.');">ℹ️ About</div>
+  </div>
+
+  <main>
+    <section class="card" id="profileCard">
+      <h2>Quick Stats</h2>
+      <div class="muted">Shop: {{ shop.name if shop else 'Not registered' }}</div>
+      <div class="muted">Books listed: {{ books|length }}</div>
+      <div class="muted">Orders: {{ orders|length }}</div>
+    </section>
+
+    {% if not shop %}
+      <section class="card">
+        <h2>Register Shop</h2>
+        <form id="shopForm">
+          <input name="name" placeholder="Shop name" required>
+          <textarea name="description" placeholder="Description"></textarea>
+          <input name="address" placeholder="Address">
+          <input name="phone" placeholder="Phone">
+          <button class="btn-blue" type="submit">Save</button>
+        </form>
+        <div id="shop_msg" class="muted"></div>
+      </section>
+    {% endif %}
+
+    {% if shop %}
+    <section class="card" id="catCard">
+      <h2>Add Category (shared)</h2>
+      <form id="catForm" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <input name="name" placeholder="Category name (e.g. Fiction)" required style="flex:1;min-width:220px;">
+        <button class="btn-blue" type="submit">Add</button>
+      </form>
+      <div class="muted" style="margin-top:8px">All shop owners can see these categories.</div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+        {% for c in categories %}
+          <span class="muted" style="background:#eef2ff;padding:6px 10px;border-radius:10px;">{{ c.name }}</span>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="card" id="addBookCard">
+      <h2>Add Book</h2>
+      <form id="bookForm" enctype="multipart/form-data" class="grid-2">
+        <div style="display:grid;gap:10px;">
+          <input name="title" placeholder="Title" required>
+          <input name="author" placeholder="Author" required>
+          <input name="price" type="number" min="0" step="0.01" placeholder="Price" required>
+          <input name="stock" type="number" min="0" placeholder="Stock" required>
+          <div>
+            <label class="muted" style="display:block;margin-bottom:4px;">Category</label>
+            <input list="catList" name="category" placeholder="Select or type category" autocomplete="off">
+            <datalist id="catList">
+              {% for c in categories %}
+                <option value="{{ c.name }}"></option>
+              {% endfor %}
+            </datalist>
+          </div>
+          <input name="discount" type="number" min="0" max="90" step="1" placeholder="Discount %">
+          <input name="publication_year" type="number" min="1800" max="2100" placeholder="Publication year">
+          <input name="language" placeholder="Language">
+        </div>
+        <div style="display:grid;gap:10px;">
+          <input name="image_url" placeholder="Image URL (optional)">
+          <input name="image_file" type="file" accept="image/*">
+          <textarea name="description" rows="4" placeholder="Description"></textarea>
+          <button class="btn-green" type="submit">Add Book</button>
+          <div id="book_msg" class="muted"></div>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" id="booksCard">
+      <h2>Your Books</h2>
+      <table>
+        <tr>
+          <th>Book</th><th>Price</th><th>Stock</th><th>Image URL</th><th>Actions</th>
+        </tr>
+        {% for b in books %}
+        <tr>
+          <td>
+            <div>{{ b.title }}</div>
+            <div class="muted">{{ b.author or '-' }}</div>
+          </td>
+          <td><input id="price_{{ b.book_id }}" type="number" min="0" step="0.01" value="{{ b.price }}"></td>
+          <td><input id="stock_{{ b.book_id }}" type="number" min="0" value="{{ b.stock }}"></td>
+          <td>
+            <input id="img_{{ b.book_id }}" value="{{ b.image_url }}">
+            {% if b.image_url %}<div><img class="img-thumb" src="{{ b.image_url }}"></div>{% endif %}
+          </td>
+          <td>
+            <button class="btn-blue" onclick="updateBook('{{ b.book_id }}')">Save</button>
+            <button class="btn-red" onclick="deleteBook('{{ b.book_id }}')">Delete</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </section>
+
+    <section class="card" id="ordersCard">
+      <h2>Orders</h2>
+      <table>
+        <tr><th>Order ID</th><th>User</th><th>Total</th><th>Status</th><th>Delivery</th></tr>
+        {% for o in orders %}
+        <tr>
+          <td>{{ o.order_id }}</td>
+          <td>{{ o.user_id }}</td>
+          <td>Rs {{ "%.2f"|format(o.total_price) }}</td>
+          <td>{{ o.order_status }}</td>
+          <td>{{ o.delivery_type }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </section>
+    {% endif %}
+  </main>
+
+  <script>
+    async function postJson(url, payload){
+      const res = await fetch(url,{
+        method:"POST",
+        headers:{"Content-Type":"application/json","Accept":"application/json"},
+        body:JSON.stringify(payload)
+      });
+      const text = await res.text();
+      try { return JSON.parse(text); } catch(_) { return {success:false, error:text || "Unexpected response"}; }
+    }
+    async function postFormData(url, fd){
+      const res = await fetch(url,{
+        method:"POST",
+        headers:{"Accept":"application/json"},
+        body:fd
+      });
+      const text = await res.text();
+      try { return JSON.parse(text); } catch(_) { return {success:false, error:text || "Unexpected response"}; }
+    }
+
+    const shopForm = document.getElementById("shopForm");
+    if(shopForm){
+      shopForm.addEventListener("submit", async (e)=>{
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const out = await postJson("/shop/register-shop", Object.fromEntries(fd.entries()));
+        document.getElementById("shop_msg").textContent = out.success ? "Shop saved" : (out.error || "Failed");
+        if(out.success) setTimeout(()=>location.reload(), 600);
+      });
+    }
+
+    const bookForm = document.getElementById("bookForm");
+    if(bookForm){
+      const submitBtn = bookForm.querySelector("button[type='submit']");
+      bookForm.addEventListener("submit", async (e)=>{
+        e.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Adding...";
+        const fd = new FormData(e.target);
+        const out = await postFormData("/shop/add-book", fd);
+        document.getElementById("book_msg").textContent = out.success ? "Book added" : (out.error || "Failed");
+        if(out.success){
+          e.target.reset();
+          setTimeout(()=>location.reload(), 600);
+        } else {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Add Book";
+          console.error("Add book failed", out);
+        }
+      });
+    }
+
+    const catForm = document.getElementById("catForm");
+    if(catForm){
+      catForm.addEventListener("submit", async (e)=>{
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const out = await postJson("/shop/categories", Object.fromEntries(fd.entries()));
+        document.getElementById("book_msg").textContent = out.success ? "Category added" : (out.error || "Failed");
+        if(out.success){ e.target.reset(); setTimeout(()=>location.reload(), 600); }
+      });
+    }
+
+    async function updateBook(id){
+      const payload = {
+        price: document.getElementById("price_"+id).value,
+        stock: document.getElementById("stock_"+id).value,
+        image_url: document.getElementById("img_"+id).value
+      };
+      const out = await postJson("/shop/edit-book/" + id, payload);
+      if(!out.success){ alert(out.error || "Failed"); return; }
+      location.reload();
+    }
+
+    async function deleteBook(id){
+      if(!confirm("Delete this book?")) return;
+      const out = await postJson("/shop/delete-book/" + id, {});
+      if(!out.success){ alert(out.error || "Failed"); return; }
+      location.reload();
+    }
+  </script>
+</body>
+</html>
